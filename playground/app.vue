@@ -1,8 +1,9 @@
 <template>
   <div>
-    Nuxt module playground!
+    <DicomApp />
   </div>
 </template>
 
 <script setup>
+
 </script>

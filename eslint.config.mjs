@@ -8,6 +8,7 @@ export default createConfigForNuxt({
     tooling: true,
     // Rules for formatting
     stylistic: true,
+
   },
   dirs: {
     src: [
@@ -15,6 +16,9 @@ export default createConfigForNuxt({
     ],
   },
 })
-  .append(
-    // your custom flat config here...
-  )
+  .append({
+    rules: {
+      'vue/multi-word-component-names': 'off',
+      'no-control-regex': 'off',
+    },
+  })
