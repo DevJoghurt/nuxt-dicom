@@ -1,10 +1,17 @@
 {
-  "name": "nuxt-dicom",
-  "version": "0.0.4",
+  "name": "@nuxthealth/dicom",
+  "version": "0.0.1",
   "description": "Nuxt module for DICOM",
-  "repository": "@nuxthealth/dicom",
   "license": "MIT",
   "type": "module",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/DevJoghurt/nuxt-dicom.git"
+  },
   "exports": {
     ".": {
       "types": "./dist/types.d.ts",
