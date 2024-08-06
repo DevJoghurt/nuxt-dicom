@@ -37,14 +37,14 @@ export default defineNuxtModule<ModuleOptions>({
       global: true,
     })
     // check if @nuxt/ui is installed
-    await installModule('@nuxt/ui', {
-      icons: ['heroicons'],
-    })
+    await installModule('@nuxt/ui')
 
     // add tailwindcss support
     _nuxt.hook('tailwindcss:config', (tailwindConfig) => {
       tailwindConfig.content = tailwindConfig.content || []
+      // @ts-ignore
       tailwindConfig.content.files = tailwindConfig.content.files || []
+      // @ts-ignore
       tailwindConfig.content.files.push(resolver.resolve('./runtime/app/**/*.{vue,js,ts}'))
     })
 
@@ -66,7 +66,7 @@ export default defineNuxtModule<ModuleOptions>({
       _nuxt.options.nitro.externals.traceInclude?.push('node_modules/pm2/lib/ProcessContainerFork.js') // add missing file to use pm2 in production build
       _nuxt.options.nitro.externals.traceInclude?.push('node_modules/@nuxthealth/node-dicom')
 
-      const storeSCPScriptPath = _nuxt.options.dev ? resolver.resolve('./runtime/storescp/server.mjs') : 'build'
+      const storeSCPScriptPath = _nuxt.options.dev ? resolver.resolve('./runtime/storescp/server.js') : 'build'
 
       const runtimeConfig = _nuxt.options.runtimeConfig
       runtimeConfig.dicom = defu(runtimeConfig?.dicom || {}, {
@@ -79,8 +79,8 @@ export default defineNuxtModule<ModuleOptions>({
       })
 
       _nuxt.hook('nitro:build:public-assets', async (nitro) => {
-        const targetDir = join(nitro.options.output.serverDir, './storescp.mjs')
-        cpSync(resolver.resolve('./runtime/storescp/server.mjs'), targetDir, { recursive: true })
+        const targetDir = join(nitro.options.output.serverDir, './storescp.js')
+        cpSync(resolver.resolve('./runtime/storescp/server.js'), targetDir, { recursive: true })
         logger.success('Added DICOM StoreSCP to output')
       })
     }
