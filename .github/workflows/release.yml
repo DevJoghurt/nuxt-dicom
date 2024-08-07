@@ -21,6 +21,14 @@ jobs:
         with:
           node-version: 20
 
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
       - run: npx changelogithub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Publish package
+        run: ./scripts/release.sh
+        env:
+          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
