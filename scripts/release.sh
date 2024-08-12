@@ -5,9 +5,6 @@ set -xe
 # Restore all git changes
 git restore --source=HEAD --staged --worktree -- package.json yarn.lock
 
-# Resolve yarn
-#yarn install --frozen-lockfile=false
-
 # Update token
 if [[ ! -z ${NPM_TOKEN} ]] ; then
   echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
