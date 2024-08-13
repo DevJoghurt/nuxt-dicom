@@ -1,6 +1,6 @@
 {
   "name": "@nuxthealth/dicom",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Nuxt module for DICOM",
   "license": "MIT",
   "type": "module",
@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@nuxt/kit": "^3.12.4",
-    "@nuxthealth/node-dicom": "0.0.8",
+    "@nuxthealth/node-dicom": "0.0.9",
     "pm2": "^5.4.2",
     "zod": "^3.23.8",
     "@nuxt/ui": "^2.18.4",
