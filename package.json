@@ -36,7 +36,8 @@
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit",
-    "cleanup": "rimraf 'playground/node_modules' 'node_modules'"
+    "cleanup": "rimraf 'playground/node_modules' 'node_modules'",
+    "bumpp": "bumpp"
   },
   "dependencies": {
     "@nuxt/kit": "^3.12.4",

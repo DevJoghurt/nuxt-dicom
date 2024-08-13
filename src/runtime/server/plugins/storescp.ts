@@ -33,7 +33,7 @@ export default defineNitroPlugin(async (nitro) => {
   // add scriptPath for dev env and production build
   let scriptPath = storeSCP.scriptPath
   if (scriptPath === 'build') {
-    scriptPath = join(dirname(fileURLToPath(import.meta.url)), 'storescp.mjs')
+    scriptPath = join(dirname(fileURLToPath(import.meta.url)), 'storescp.js')
   }
 
   await start({
