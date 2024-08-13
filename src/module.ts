@@ -48,23 +48,24 @@ export default defineNuxtModule<ModuleOptions>({
       tailwindConfig.content.files.push(resolver.resolve('./runtime/app/**/*.{vue,js,ts}'))
     })
 
-    // Alias for worker config with meta information
-    _nuxt.hook('nitro:config', (nitroConfig) => {
-      // add websocket support
-      nitroConfig.experimental = defu(nitroConfig.experimental, {
-        websocket: true,
-      })
-    })
-
     // add @nuxthealth/node-dicom to externals tracing because Store SCP Server is not part of nuxt building process
     if (_options.storeSCP.enabled) {
-      if (!_nuxt.options.nitro.externals?.traceInclude) {
-        _nuxt.options.nitro.externals = defu(_nuxt.options.nitro.externals || {}, {
-          traceInclude: [],
+
+      _nuxt.hook('nitro:config', (nitroConfig) => {
+        if (!nitroConfig.externals?.traceInclude) {
+          nitroConfig.externals = defu(_nuxt.options.nitro.externals || {}, {
+            traceInclude: [],
+          })
+        }
+        nitroConfig.externals.traceInclude?.push('node_modules/pm2/lib/ProcessContainerFork.js') // add missing file to use pm2 in production build
+        nitroConfig.externals.traceInclude?.push('node_modules/@nuxthealth/node-dicom/index.js') // add dicom module to externals
+  
+        // add websocket support
+        nitroConfig.experimental = defu(nitroConfig.experimental, {
+          websocket: true,
         })
-      }
-      _nuxt.options.nitro.externals.traceInclude?.push('node_modules/pm2/lib/ProcessContainerFork.js') // add missing file to use pm2 in production build
-      _nuxt.options.nitro.externals.traceInclude?.push('node_modules/@nuxthealth/node-dicom')
+      })
+
 
       const storeSCPScriptPath = _nuxt.options.dev ? resolver.resolve('./runtime/storescp/server.js') : 'build'
 
