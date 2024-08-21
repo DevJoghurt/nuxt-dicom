@@ -1,18 +1,31 @@
-import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { consola } from 'consola'
-import { useRuntimeConfig, defineNitroPlugin, $useDicomProcessManager, getStoreSCPEventListener } from '#imports'
+import { defineNitroPlugin, useWorker, useRuntimeConfig, getStoreSCPEventListener } from '#imports'
+
+const PROCESS_FILE = 'storescp.js';
 
 export default defineNitroPlugin(async (nitro) => {
+
   const logger = consola.create({}).withTag('STORESCP')
 
-  const { storeSCP } = useRuntimeConfig().dicom
+  const { storeSCP } = useRuntimeConfig().dicom;
 
-  const { initLaunchBus, disconnect: disconnectPM2, start } = $useDicomProcessManager()
+  let scriptPath = storeSCP.scriptPath;
+  if (scriptPath === 'build') {
+    scriptPath = join(dirname(process.argv[1]), PROCESS_FILE);
+  }
 
-  const pm2EventBus = await initLaunchBus()
+  const { launchWorker, closeWorker } = useWorker()
 
-  pm2EventBus.on('process:msg', function ({ data }) {
+  const worker = launchWorker(scriptPath, {
+    name: 'storescp_process',
+    data: {
+      port: storeSCP.port,
+      outDir: storeSCP.outDir
+    }
+  })
+
+  worker.on('message', (data) => {
     const storeSCPEventListener = getStoreSCPEventListener()
 
     switch (data?.event) {
@@ -28,28 +41,11 @@ export default defineNitroPlugin(async (nitro) => {
       default:
         logger.info(`Event [${data?.event || ''}]`, data?.message)
     }
-  })
-
-  // add scriptPath for dev env and production build
-  let scriptPath = storeSCP.scriptPath
-  if (scriptPath === 'build') {
-    scriptPath = join(dirname(fileURLToPath(import.meta.url)), 'storescp.js')
-  }
-
-  await start({
-    name: 'storescp',
-    script: scriptPath,
-    output: storeSCP.logs,
-    error: storeSCP.logs,
-    env: {
-      SERVER_PORT: storeSCP.port.toString(),
-      OUT_DIR: storeSCP.outDir,
-    },
-  })
+})
 
   nitro.hooks.hook('close', async () => {
     logger.info('Close all StoreSCP services')
-    await disconnectPM2()
+    await closeWorker()
     logger.success('Successfully closed all StoreSCP services')
   })
 })

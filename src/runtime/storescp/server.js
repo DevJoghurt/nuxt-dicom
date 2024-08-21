@@ -1,8 +1,8 @@
 import { StoreScp } from '@nuxthealth/node-dicom'
+import { workerData, parentPort } from 'node:worker_threads'
 
 const gracefulShutdown = () => {
-  // Todo: implement graceful shutdown with pm2 integration
-  // currently something in rust code is causing the sigint to be catched by the process
+  // Todo: implement graceful shutdown
   sendMessage('error', {
     data: '',
     message: 'StoreSCP SIGINT message',
@@ -10,19 +10,16 @@ const gracefulShutdown = () => {
 }
 
 function sendMessage(event, message) {
-  process.send({
-    type: 'process:msg',
-    data: {
-      event: event,
-      data: message.data,
-      message: message.message,
-    },
-  })
+  parentPort.postMessage({
+    event: event,
+    data: message.data,
+    message: message.message,
+  });
 };
 
 const server = new StoreScp({
-  port: Number.parseInt(process.env.SERVER_PORT) || 4446,
-  outDir: process.env?.OUT_DIR || 'tmp',
+  port: workerData?.port || 4446,
+  outDir: workerData?.outDir || 'tmp',
 })
 
 server.listen((event, data) => {
