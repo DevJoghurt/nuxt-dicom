@@ -9,6 +9,13 @@ const gracefulShutdown = () => {
   })
 }
 
+/*
+  //TODO: Implement messaging - currently rust blocks main thread, maybe fix by using tokyo
+  parentPort.on("message", message => {
+    console.log('inside worker',message)
+  })
+*/
+
 function sendMessage(event, message) {
   parentPort.postMessage({
     event: event,

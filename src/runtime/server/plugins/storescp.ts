@@ -1,6 +1,7 @@
 import { dirname, join } from 'node:path'
 import { consola } from 'consola'
 import { defineNitroPlugin, useWorker, useRuntimeConfig, getStoreSCPEventListener } from '#imports'
+import { Worker } from 'node:worker_threads';
 
 const PROCESS_FILE = 'storescp.js';
 
@@ -42,10 +43,15 @@ export default defineNitroPlugin(async (nitro) => {
         logger.info(`Event [${data?.event || ''}]`, data?.message)
     }
 })
+worker.postMessage("twice")
 
   nitro.hooks.hook('close', async () => {
-    logger.info('Close all StoreSCP services')
-    await closeWorker()
-    logger.success('Successfully closed all StoreSCP services')
+    if(process.env.NODE_ENV === 'production'){
+      logger.info('Close all StoreSCP services')
+      await closeWorker()
+      logger.success('Successfully closed all StoreSCP services')
+    } else {
+      logger.success('Store SCP is not restarting in dev mode')
+    }
   })
 })
