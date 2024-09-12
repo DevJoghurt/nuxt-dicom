@@ -1,15 +1,17 @@
-import { defineEventHandler, useRuntimeConfig, $useDicomProcessManager } from '#imports'
+import { defineEventHandler, useRuntimeConfig, useProcess } from '#imports'
 
 export default defineEventHandler(async () => {
   const { storeSCP } = useRuntimeConfig().dicom
 
-  const { list } = $useDicomProcessManager()
+  const { getProcessInstance } = useProcess ()
 
-  const process = (await list()).find(p => p.id === 'storescp')
+  const processInstance = getProcessInstance('storescp_process')
 
   return {
     status: 200,
-    process: process || null,
+    process: {
+      createdAt: processInstance?.createdAt,
+    },
     server: {
       port: storeSCP.port,
     },

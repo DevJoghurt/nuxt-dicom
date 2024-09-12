@@ -22,7 +22,7 @@ export default defineNuxtModule<ModuleOptions>({
   defaults: {
     storeSCP: {
       enabled: true,
-      port: 4446,
+      port: 1223,
       outDir: 'tmp',
     },
   },
@@ -50,22 +50,19 @@ export default defineNuxtModule<ModuleOptions>({
 
     // add @nuxthealth/node-dicom to externals tracing because Store SCP Server is not part of nuxt building process
     if (_options.storeSCP.enabled) {
-
       _nuxt.hook('nitro:config', (nitroConfig) => {
         if (!nitroConfig.externals?.traceInclude) {
           nitroConfig.externals = defu(_nuxt.options.nitro.externals || {}, {
             traceInclude: [],
           })
         }
-        nitroConfig.externals.traceInclude?.push('node_modules/pm2/lib/ProcessContainerFork.js') // add missing file to use pm2 in production build
         nitroConfig.externals.traceInclude?.push('node_modules/@nuxthealth/node-dicom/index.js') // add dicom module to externals
-  
+
         // add websocket support
         nitroConfig.experimental = defu(nitroConfig.experimental, {
           websocket: true,
         })
       })
-
 
       const storeSCPScriptPath = _nuxt.options.dev ? resolver.resolve('./runtime/storescp/server.js') : 'build'
 

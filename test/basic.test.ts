@@ -1,15 +1,14 @@
-import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
-import { setup, $fetch } from '@nuxt/test-utils/e2e'
+import { StoreScu } from '@nuxthealth/node-dicom'
 
-describe('ssr', async () => {
-  await setup({
-    rootDir: fileURLToPath(new URL('./fixtures/basic', import.meta.url)),
-  })
-
-  it('renders the index page', async () => {
-    // Get response to a server-rendered page with `$fetch`.
-    const html = await $fetch('/')
-    expect(html).toContain('<div>basic</div>')
+describe('StoreSCP', async () => {
+  it('Send file', async () => {
+    const storeSCU = new StoreScu({
+      addr: '127.0.0.1:1222',
+      verbose: false,
+    })
+    storeSCU.addFile('./test/fixtures/basic/files/test.dcm')
+    const result = storeSCU.send()
+    expect(result.status).equals('Success')
   })
 })

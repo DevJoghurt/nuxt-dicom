@@ -1,5 +1,7 @@
 <template>
-  <div>basic</div>
+  <div>
+    <DicomApp />
+  </div>
 </template>
 
 <script setup>

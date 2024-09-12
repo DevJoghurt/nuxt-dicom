@@ -24,7 +24,7 @@
             </h2>
           </template>
           <div>
-            <pre>{{ data?.logs }}</pre>
+            <pre>No logs</pre>
           </div>
         </UCard>
       </div>
@@ -47,26 +47,10 @@
               </div>
               <div>
                 <p class="text-xs font-thin text-gray-500">
-                  Uptime
+                  Created at
                 </p>
                 <p class="text-sm font-bold">
-                  {{ new Date((service?.process?.uptime || 0)).toLocaleString() }}
-                </p>
-              </div>
-              <div>
-                <p class="text-xs font-thin text-gray-500">
-                  Memory
-                </p>
-                <p class="text-sm font-bold">
-                  {{ formatBytes(service?.process?.monitor?.memory || 0) }}
-                </p>
-              </div>
-              <div>
-                <p class="text-xs font-thin text-gray-500">
-                  CPU
-                </p>
-                <p class="text-sm font-bold">
-                  {{ service?.process?.monitor?.cpu }}
+                  {{ new Date((service?.process?.createdAt || 0)).toLocaleString() }}
                 </p>
               </div>
               <div>
@@ -75,22 +59,6 @@
                 </p>
                 <p class="text-sm font-bold">
                   {{ service?.process?.restartTime }}
-                </p>
-              </div>
-              <div>
-                <p class="text-xs font-thin text-gray-500">
-                  Version
-                </p>
-                <p class="text-sm font-bold">
-                  {{ service?.process?.version }}
-                </p>
-              </div>
-              <div>
-                <p class="text-xs font-thin text-gray-500">
-                  Node Version
-                </p>
-                <p class="text-sm font-bold">
-                  {{ service?.process?.nodeVersion }}
                 </p>
               </div>
             </div>
@@ -104,51 +72,19 @@
 <script setup lang="ts">
 import { useFetch, onMounted, onBeforeUnmount, ref } from '#imports'
 
-    type Logs = {
-      logs: string
+  type Service = {
+    process: {
+      status: 'online' | 'stopping' | 'stopped' | 'launching' | 'errored' | 'one-launch-status'
+      uptime: number
+      createdAt: number
+      restartTime: number
     }
-
-    type Service = {
-      process: {
-        id: string
-        pid: number
-        namespace: 'dicom'
-        status: 'online' | 'stopping' | 'stopped' | 'launching' | 'errored' | 'one-launch-status'
-        uptime: number
-        createdAt: number
-        restartTime: number
-        version: string
-        nodeVersion: string
-        monitor: {
-          memory: number
-          cpu: number
-        }
-      }
-      server: {
-        port: number
-      }
+    server: {
+      port: number
     }
+  }
 
 const intval = ref<ReturnType<typeof setInterval> | null>(null)
-
-function formatBytes(bytes: number, decimals = 2) {
-  if (!+bytes) return '0 Bytes'
-
-  const k = 1024
-  const dm = decimals < 0 ? 0 : decimals
-  const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
-
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-
-  return `${Number.parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
-}
-
-const {
-  data,
-  refresh: refreshLogs,
-} = await useFetch<Logs>(`/api/_dicom/storescp/logs`, {
-  method: 'GET',
-})
 
 const {
   data: service,
@@ -159,7 +95,6 @@ const {
 
 onMounted(() => {
   intval.value = setInterval(() => {
-    refreshLogs()
     refreshService()
   }, 2000)
 })

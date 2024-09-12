@@ -1,57 +1,49 @@
 import { dirname, join } from 'node:path'
 import { consola } from 'consola'
-import { defineNitroPlugin, useWorker, useRuntimeConfig, getStoreSCPEventListener } from '#imports'
-import { Worker } from 'node:worker_threads';
+import { defineNitroPlugin, useProcess, useRuntimeConfig, getStoreSCPEventListener } from '#imports'
 
-const PROCESS_FILE = 'storescp.js';
+const PROCESS_FILE = 'storescp.js'
 
 export default defineNitroPlugin(async (nitro) => {
-
   const logger = consola.create({}).withTag('STORESCP')
 
-  const { storeSCP } = useRuntimeConfig().dicom;
+  const { storeSCP } = useRuntimeConfig().dicom
 
-  let scriptPath = storeSCP.scriptPath;
-  if (scriptPath === 'build') {
-    scriptPath = join(dirname(process.argv[1]), PROCESS_FILE);
+  let scriptPath = storeSCP.scriptPath
+  const isDev = scriptPath === 'build' ? false : true
+
+  if (!isDev) {
+    scriptPath = join(dirname(process.argv[1]), PROCESS_FILE)
   }
 
-  const { launchWorker, closeWorker } = useWorker()
+  const { launchProcess, closeProcess } = useProcess()
 
-  const worker = launchWorker(scriptPath, {
+  const spawnedProcess = launchProcess(scriptPath, {
     name: 'storescp_process',
-    data: {
-      port: storeSCP.port,
-      outDir: storeSCP.outDir
-    }
+    env: {
+      port: storeSCP.port.toString(),
+      outDir: storeSCP.outDir,
+    },
   })
 
-  worker.on('message', (data) => {
+  spawnedProcess.on('message', (msg) => {
     const storeSCPEventListener = getStoreSCPEventListener()
-
-    switch (data?.event) {
+    switch (msg?.event) {
       case 'OnServerStarted':
-        logger.success(`Store SCP Server listening on ${data?.data}`)
+        logger.success(`Store SCP Server listening on ${msg?.data}`)
         break
       case 'OnFileStored':
-        logger.success(`File received ${data?.data}`)
+        logger.success(`File received ${msg?.data}`)
         for (const handler of storeSCPEventListener) {
-          handler(data.data)
+          handler(msg.data)
         }
         break
       default:
-        logger.info(`Event [${data?.event || ''}]`, data?.message)
+        logger.info(`Event [${msg?.event || ''}]`, msg?.message)
     }
-})
-worker.postMessage("twice")
+  })
 
   nitro.hooks.hook('close', async () => {
-    if(process.env.NODE_ENV === 'production'){
-      logger.info('Close all StoreSCP services')
-      await closeWorker()
-      logger.success('Successfully closed all StoreSCP services')
-    } else {
-      logger.success('Store SCP is not restarting in dev mode')
-    }
+    closeProcess('storescp_process')
   })
 })
