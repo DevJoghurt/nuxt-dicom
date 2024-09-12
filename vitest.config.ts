@@ -1,5 +1,5 @@
 import { defineVitestConfig } from '@nuxt/test-utils/config'
 
 export default defineVitestConfig({
-  environment: 'nuxt'
+  environment: 'nuxt',
 })
