@@ -1,6 +1,7 @@
 export default defineNuxtConfig({
   modules: [
     '../src/module',
+    '@nuxt/ui',
   ],
   dicom: {},
   devtools: {

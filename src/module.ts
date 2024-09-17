@@ -1,6 +1,6 @@
 import { cpSync } from 'node:fs'
 import { join } from 'node:path'
-import { defineNuxtModule, createResolver, addServerScanDir, logger, addComponent, installModule } from '@nuxt/kit'
+import { defineNuxtModule, createResolver, addServerScanDir, logger, addComponent } from '@nuxt/kit'
 import defu from 'defu'
 
 // Module options TypeScript interface definition
@@ -36,9 +36,6 @@ export default defineNuxtModule<ModuleOptions>({
       filePath: resolver.resolve('./runtime/app/index.vue'),
       global: true,
     })
-
-    // add @nuxt/ui if not installed
-    installModule('@nuxt/ui')
 
     // add tailwindcss support
     _nuxt.hook('tailwindcss:config', (tailwindConfig) => {
