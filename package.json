@@ -40,6 +40,8 @@
     "bumpp": "bumpp"
   },
   "dependencies": {
+    "@nuxt/ui": "^2.18.4",
+    "@iconify-json/heroicons": "1.2.0",
     "@nuxt/kit": "^3.13.2",
     "@nuxthealth/node-dicom": "0.0.9",
     "zod": "^3.23.8",
@@ -47,8 +49,6 @@
     "defu": "^6.1.4"
   },
   "devDependencies": {
-    "@nuxt/ui": "^2.18.4",
-    "@iconify-json/heroicons": "1.2.0",
     "@nuxt/devtools": "^1.4.2",
     "@nuxt/eslint-config": "^0.5.7",
     "@nuxt/module-builder": "^0.8.4",
