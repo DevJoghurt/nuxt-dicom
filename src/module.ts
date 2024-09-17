@@ -1,6 +1,6 @@
 import { cpSync } from 'node:fs'
 import { join } from 'node:path'
-import { defineNuxtModule, createResolver, addServerScanDir, logger, addComponent, installModule } from '@nuxt/kit'
+import { defineNuxtModule, createResolver, addServerScanDir, logger, addComponent } from '@nuxt/kit'
 import defu from 'defu'
 
 // Module options TypeScript interface definition
@@ -36,14 +36,14 @@ export default defineNuxtModule<ModuleOptions>({
       filePath: resolver.resolve('./runtime/app/index.vue'),
       global: true,
     })
-    // check if @nuxt/ui is installed
-    await installModule('@nuxt/ui')
 
     // add tailwindcss support
     _nuxt.hook('tailwindcss:config', (tailwindConfig) => {
       tailwindConfig.content = tailwindConfig.content || []
       // @ts-ignore
-      tailwindConfig.content.push(resolver.resolve('./runtime/app/**/*.{vue,js,ts}'))
+      tailwindConfig.content.files = tailwindConfig.content.files || []
+      // @ts-ignore
+      tailwindConfig.content.files.push(resolver.resolve('./runtime/app/**/*.{vue,js,ts}'))
     })
 
     // add @nuxthealth/node-dicom to externals tracing because Store SCP Server is not part of nuxt building process

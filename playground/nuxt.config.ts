@@ -1,7 +1,12 @@
 export default defineNuxtConfig({
-  modules: ['../src/module'],
+  modules: [
+    '@nuxt/ui',
+    '../src/module'
+  ],
   dicom: {
   },
-  devtools: { enabled: true },
+  devtools: { 
+    enabled: true 
+  },
   compatibilityDate: '2024-08-05',
 })
