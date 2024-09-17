@@ -43,9 +43,7 @@ export default defineNuxtModule<ModuleOptions>({
     _nuxt.hook('tailwindcss:config', (tailwindConfig) => {
       tailwindConfig.content = tailwindConfig.content || []
       // @ts-ignore
-      tailwindConfig.content.files = tailwindConfig.content.files || []
-      // @ts-ignore
-      tailwindConfig.content.files.push(resolver.resolve('./runtime/app/**/*.{vue,js,ts}'))
+      tailwindConfig.content.push(resolver.resolve('./runtime/app/**/*.{vue,js,ts}'))
     })
 
     // add @nuxthealth/node-dicom to externals tracing because Store SCP Server is not part of nuxt building process
