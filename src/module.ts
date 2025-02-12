@@ -52,7 +52,7 @@ export default defineNuxtModule<ModuleOptions>({
         })
       })
 
-      const storeSCPScriptPath = _nuxt.options.dev ? resolver.resolve('./runtime/storescp/server.mjs') : 'build'
+      const storeSCPScriptPath = _nuxt.options.dev ? resolver.resolve('./runtime/storescp/server.js') : 'build'
 
       const runtimeConfig = _nuxt.options.runtimeConfig
       runtimeConfig.dicom = defu(runtimeConfig?.dicom || {}, {
@@ -64,8 +64,8 @@ export default defineNuxtModule<ModuleOptions>({
       })
 
       _nuxt.hook('nitro:build:public-assets', async (nitro) => {
-        const targetDir = join(nitro.options.output.serverDir, './storescp.mjs')
-        cpSync(resolver.resolve('./runtime/storescp/server.mjs'), targetDir, { recursive: true })
+        const targetDir = join(nitro.options.output.serverDir, './storescp.js')
+        cpSync(resolver.resolve('./runtime/storescp/server.js'), targetDir, { recursive: true })
         logger.success('Added DICOM StoreSCP to output')
       })
     }

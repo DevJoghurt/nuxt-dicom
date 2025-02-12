@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path'
 import { defineEventHandler, useProcess, useRuntimeConfig } from '#imports'
 
-const PROCESS_FILE = 'storescp.mjs'
+const PROCESS_FILE = 'storescp.js'
 
 export default defineEventHandler(async () => {
   const { launchProcess, getProcessInstance } = useProcess()
