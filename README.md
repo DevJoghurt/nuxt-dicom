@@ -5,17 +5,14 @@
 [![License][license-src]][license-href]
 [![Nuxt][nuxt-src]][nuxt-href]
 
-Use dicom tools inside your nuxt project 
-
-- [✨ &nbsp;Release Notes](/CHANGELOG.md)
-<!-- - [🏀 Online playground](https://stackblitz.com/github/your-org/my-module?file=playground%2Fapp.vue) -->
-<!-- - [📖 &nbsp;Documentation](https://example.com) -->
+Use dicom tools inside your nuxt project
 
 ## Features
 
-- ⛰ &nbsp;Run a rust based StoreSCP with PM2 as process manager
-- 🚠 &nbsp;Read and create dicom files
-- 🌲 &nbsp;StoreSCU 
+- 🛠️ &nbsp;Run a Rust-based StoreSCP alongside the Node server
+- 🌐 &nbsp;User-friendly API and UI for process management
+- 📄 &nbsp;Read and create DICOM files effortlessly
+- 📤 &nbsp;StoreSCU for sending DICOM files
 
 ## Quick Setup
 
@@ -32,27 +29,27 @@ That's it! You can now use My Module in your Nuxt app ✨
 
 <details>
   <summary>Local development</summary>
-  
+
   ```bash
   # Install dependencies
   npm install
-  
+
   # Generate type stubs
   npm run dev:prepare
-  
+
   # Develop with the playground
   npm run dev
-  
+
   # Build the playground
   npm run dev:build
-  
+
   # Run ESLint
   npm run lint
-  
+
   # Run Vitest
   npm run test
   npm run test:watch
-  
+
   # Release new version
   npm run release
   ```
@@ -61,14 +58,14 @@ That's it! You can now use My Module in your Nuxt app ✨
 
 
 <!-- Badges -->
-[npm-version-src]: https://img.shields.io/npm/v/my-module/latest.svg?style=flat&colorA=020420&colorB=00DC82
-[npm-version-href]: https://npmjs.com/package/my-module
+[npm-version-src]: https://img.shields.io/npm/v/@nuxthealth/dicom/latest.svg?style=flat&colorA=020420&colorB=00DC82
+[npm-version-href]: https://npmjs.com/package/@nuxthealth/dicom
 
-[npm-downloads-src]: https://img.shields.io/npm/dm/my-module.svg?style=flat&colorA=020420&colorB=00DC82
-[npm-downloads-href]: https://npmjs.com/package/my-module
+[npm-downloads-src]: https://img.shields.io/npm/dm/@nuxthealth/dicom.svg?style=flat&colorA=020420&colorB=00DC82
+[npm-downloads-href]: https://npmjs.com/package/@nuxthealth/dicom
 
-[license-src]: https://img.shields.io/npm/l/my-module.svg?style=flat&colorA=020420&colorB=00DC82
-[license-href]: https://npmjs.com/package/my-module
+[license-src]: https://img.shields.io/npm/l/@nuxthealth/dicom.svg?style=flat&colorA=020420&colorB=00DC82
+[license-href]: https://npmjs.com/package/@nuxthealth/dicom
 
 [nuxt-src]: https://img.shields.io/badge/Nuxt-020420?logo=nuxt.js
 [nuxt-href]: https://nuxt.com
