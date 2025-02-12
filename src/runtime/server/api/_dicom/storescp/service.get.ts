@@ -10,8 +10,13 @@ export default defineEventHandler(async () => {
   return {
     status: 200,
     process: {
-      createdAt: processInstance?.createdAt,
+      name: processInstance?.name,
+      status: processInstance?.status || 'stopped',
+      restarts: processInstance?.restarts,
+      createdAt: processInstance?.createdAt || 0,
     },
+    logs: processInstance?.logs,
+    stats: processInstance?.stats,
     server: {
       port: storeSCP.port,
     },

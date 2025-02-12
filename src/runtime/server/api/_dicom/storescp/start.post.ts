@@ -1,9 +1,20 @@
 import { dirname, join } from 'node:path'
-import { defineNitroPlugin, useProcess, useRuntimeConfig } from '#imports'
+import { defineEventHandler, useProcess, useRuntimeConfig } from '#imports'
 
 const PROCESS_FILE = 'storescp.mjs'
 
-export default defineNitroPlugin(async (nitro) => {
+export default defineEventHandler(async () => {
+  const { launchProcess, getProcessInstance } = useProcess()
+
+  const processInstance = getProcessInstance('storescp_process')
+
+  if (processInstance) {
+    return {
+      status: 'success',
+      message: 'Process already running',
+    }
+  }
+
   const { storeSCP } = useRuntimeConfig().dicom
 
   let scriptPath = storeSCP.scriptPath
@@ -13,9 +24,7 @@ export default defineNitroPlugin(async (nitro) => {
     scriptPath = join(dirname(process.argv[1]), PROCESS_FILE)
   }
 
-  const { launchProcess, closeProcess } = useProcess()
-
-  launchProcess(scriptPath, {
+  const cProcessInstance = launchProcess(scriptPath, {
     name: 'storescp_process',
     logs: {
       inMemory: true,
@@ -27,7 +36,7 @@ export default defineNitroPlugin(async (nitro) => {
     },
   })
 
-  nitro.hooks.hook('close', async () => {
-    await closeProcess('storescp_process')
-  })
+  return {
+    status: cProcessInstance ? 'success' : 'error',
+  }
 })

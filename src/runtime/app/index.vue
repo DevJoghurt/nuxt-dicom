@@ -1,8 +1,8 @@
 <template>
   <div>
     <div>
-      <UHorizontalNavigation
-        :links="links"
+      <UNavigationMenu
+        :items="links"
         class="border-b border-gray-200 dark:border-gray-800 px-4"
       />
     </div>

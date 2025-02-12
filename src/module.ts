@@ -7,7 +7,6 @@ import defu from 'defu'
 export interface ModuleOptions {
   storeSCP: {
     enabled: boolean
-    logs?: string
     port: number
     outDir: string
   }
@@ -37,14 +36,7 @@ export default defineNuxtModule<ModuleOptions>({
       global: true,
     })
 
-    // add tailwindcss support
-    _nuxt.hook('tailwindcss:config', (tailwindConfig) => {
-      if (!Array.isArray(tailwindConfig.content) && tailwindConfig.content?.files) {
-        tailwindConfig.content.files.push(resolver.resolve('./runtime/app/**/*.{vue,js,ts}'))
-      }
-    })
-
-    // add @nuxthealth/node-dicom to externals tracing because Store SCP Server is not part of nuxt building process
+    // add @nuxthealth/node-dicom to externals tracing because Store SCP Server is not part of nuxt build process
     if (_options.storeSCP.enabled) {
       _nuxt.hook('nitro:config', (nitroConfig) => {
         if (!nitroConfig.externals?.traceInclude) {
@@ -60,7 +52,7 @@ export default defineNuxtModule<ModuleOptions>({
         })
       })
 
-      const storeSCPScriptPath = _nuxt.options.dev ? resolver.resolve('./runtime/storescp/server.js') : 'build'
+      const storeSCPScriptPath = _nuxt.options.dev ? resolver.resolve('./runtime/storescp/server.mjs') : 'build'
 
       const runtimeConfig = _nuxt.options.runtimeConfig
       runtimeConfig.dicom = defu(runtimeConfig?.dicom || {}, {
@@ -68,13 +60,12 @@ export default defineNuxtModule<ModuleOptions>({
           scriptPath: storeSCPScriptPath,
           port: _options.storeSCP.port,
           outDir: _options.storeSCP.outDir,
-          logs: _options.storeSCP.logs || 'storescp.log',
         },
       })
 
       _nuxt.hook('nitro:build:public-assets', async (nitro) => {
-        const targetDir = join(nitro.options.output.serverDir, './storescp.js')
-        cpSync(resolver.resolve('./runtime/storescp/server.js'), targetDir, { recursive: true })
+        const targetDir = join(nitro.options.output.serverDir, './storescp.mjs')
+        cpSync(resolver.resolve('./runtime/storescp/server.mjs'), targetDir, { recursive: true })
         logger.success('Added DICOM StoreSCP to output')
       })
     }
