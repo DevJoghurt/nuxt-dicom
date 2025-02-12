@@ -16,7 +16,6 @@ describe('StoreSCP', async () => {
     })
     storeSCU.addFile('./test/fixtures/basic/files/test.dcm')
     const result = await storeSCU.send()
-    console.log(result)
-    expect(result.status).equals('Success')
+    expect(result[0].status).equals('Success')
   })
 })
