@@ -96,7 +96,9 @@
                   Created at
                 </p>
                 <p class="text-sm font-bold">
-                  {{ new Date((service?.process?.createdAt || 0)).toLocaleString() }}
+                  <ClientOnly>
+                    {{ new Date((service?.process?.createdAt || 0)).toLocaleString() }}
+                  </ClientOnly>
                 </p>
               </div>
               <div>
