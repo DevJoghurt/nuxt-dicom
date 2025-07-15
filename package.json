@@ -40,28 +40,29 @@
     "bumpp": "bumpp"
   },
   "dependencies": {
-    "@nuxt/kit": "^3.15.4",
-    "@nuxthealth/node-dicom": "0.0.21",
-    "zod": "^3.24.1",
+    "@nuxt/kit": "^3.17.7",
+    "@nuxthealth/node-dicom": "0.1.0",
+    "defu": "^6.1.4",
     "read-last-lines": "^1.8.0",
-    "defu": "^6.1.4"
+    "zod": "^4.0.5"
   },
   "devDependencies": {
-    "@nuxt/devtools": "^2.0.0",
-    "nuxi": "^3.21.1",
-    "@nuxt/eslint-config": "^1.0.1",
-    "@nuxt/module-builder": "^0.8.4",
-    "@nuxt/schema": "^3.15.4",
-    "@nuxt/test-utils": "^3.15.4",
-    "@nuxt/ui": "3.0.0-alpha.12",
-    "bumpp": "10.0.2",
-    "@types/node": "^22.13.1",
-    "changelogen": "^0.5.7",
-    "eslint": "^9.20.0",
-    "nuxt": "^3.15.4",
+    "@nuxt/devtools": "^2.6.2",
+    "@nuxt/eslint-config": "^1.5.2",
+    "@nuxt/module-builder": "^1.0.1",
+    "@nuxt/schema": "^3.17.7",
+    "@nuxt/test-utils": "^3.19.2",
+    "@nuxt/ui": "3.2.0",
+    "@types/node": "^24.0.14",
+    "bumpp": "10.2.0",
+    "changelogen": "^0.6.2",
+    "eslint": "^9.31.0",
+    "nuxi": "^3.26.0",
+    "nuxt": "^3.17.7",
+    "rimraf": "^6.0.1",
     "typescript": "latest",
-    "vitest": "^3.0.5",
-    "vue-tsc": "^2.2.0",
-    "rimraf": "^6.0.1"
-  }
+    "vitest": "^3.2.4",
+    "vue-tsc": "^3.0.1"
+  },
+  "packageManager": "yarn@4.9.2"
 }
