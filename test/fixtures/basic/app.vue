@@ -1,7 +1,7 @@
 <template>
-  <div>
-    <DicomApp />
-  </div>
+  <UApp>
+    <StoreScp />
+  </UApp>
 </template>
 
 <script setup>

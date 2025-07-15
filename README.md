@@ -9,10 +9,10 @@ Use dicom tools inside your nuxt project
 
 ## Features
 
-- 🛠️ &nbsp;Run a Rust-based StoreSCP alongside the Node server
-- 🌐 &nbsp;User-friendly API and UI for process management
-- 📄 &nbsp;Read and create DICOM files effortlessly
-- 📤 &nbsp;StoreSCU for sending DICOM files
+- Run a rust based StoreSCP next to the node server
+- Easy api and UI to manage the process
+- Read and create dicom files
+- StoreSCU
 
 ## Quick Setup
 
