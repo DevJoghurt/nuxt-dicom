@@ -31,8 +31,8 @@ export default defineNuxtModule<ModuleOptions>({
     addServerScanDir(resolver.resolve('./runtime/server'))
 
     addComponent({
-      name: 'DicomApp',
-      filePath: resolver.resolve('./runtime/app/index.vue'),
+      name: 'StoreSCP',
+      filePath: resolver.resolve('./runtime/app/store_scp/index.vue'),
       global: true,
     })
 
