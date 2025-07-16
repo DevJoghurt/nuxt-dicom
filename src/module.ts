@@ -49,7 +49,19 @@ export default defineNuxtModule<ModuleOptions>({
         // add websocket support
         nitroConfig.experimental = defu(nitroConfig.experimental, {
           websocket: true,
+          database: true
         })
+
+        // add database for DICOM related data that need persistence
+        nitroConfig.database = defu(nitroConfig.database, {
+          dicom: {
+            connector: 'sqlite',
+            options: {
+              name: 'dicom'
+            }
+          }
+        })
+
       })
 
       const storeSCPScriptPath = _nuxt.options.dev ? resolver.resolve('./runtime/storescp/server.js') : 'build'
