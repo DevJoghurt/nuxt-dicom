@@ -2,14 +2,9 @@ import { fork, type ChildProcess } from 'node:child_process'
 import { consola } from 'consola'
 import { defu } from 'defu'
 import { getStoreSCPEventListener } from '#imports'
+import type { StoreSCPConfig } from '../../types'
 
 type ProcessServiceTypes = 'storeSCP'
-
-type StoreSCPConfig = {
-	enabled: boolean
-  	port: number
-  	outDir: string
-}
 
 type ProcessServiceConfig = {
 	storeSCP: StoreSCPConfig
@@ -80,6 +75,12 @@ export function useProcess() {
     return []
   }
 
+  /**
+   * Get the configuration for a specific process service.
+   * @param type Process service type
+   * @template T Type of the process service
+   * @returns Process service configuration
+   */
   const getServiceConfig = async <T extends ProcessServiceTypes>(type: T): Promise<ProcessServiceConfig[T]> => {
       if (!PROCESS_SERVICE_CONFIG[type]) {
         throw new Error(`Process service config for type "${type}" is not defined.`)
@@ -96,17 +97,23 @@ export function useProcess() {
         const { rows } = await db.sql`SELECT config FROM services WHERE type = ${type} LIMIT 1`;
         if (rows && rows.length > 0) {
           const dbConfig = rows[0].config as Partial<ProcessServiceConfig[T]>
-          PROCESS_SERVICE_CONFIG[type] = defu(PROCESS_SERVICE_CONFIG[type], dbConfig)
+          PROCESS_SERVICE_CONFIG[type] = defu(PROCESS_SERVICE_CONFIG[type], dbConfig) as ProcessServiceConfig[T]
         }
       } catch (error) {
-        console.error(`Failed to fetch config for type "${type}":`, error)
+        logger.error(`Failed to fetch config for type "${type}":`, error)
       }
 
       return PROCESS_SERVICE_CONFIG[type] as ProcessServiceConfig[T]
 	}
 
+  /**
+   * Set the configuration for a specific process service.
+   * @param type Process service type
+   * @param config Partial configuration to set
+   * @template T Type of the process service
+   */
   const setServiceConfig = async <T extends ProcessServiceTypes>(type: T, config: Partial<ProcessServiceConfig[T]>) => {
-    PROCESS_SERVICE_CONFIG[type] = defu(PROCESS_SERVICE_CONFIG[type], config)
+    PROCESS_SERVICE_CONFIG[type] = defu(PROCESS_SERVICE_CONFIG[type], config) as ProcessServiceConfig[T]
     // save config to sql db
     const db = useDatabase('dicom')
     if (!db) {
@@ -115,7 +122,7 @@ export function useProcess() {
     try {
       await db.sql`UPDATE services SET config = ${JSON.stringify(PROCESS_SERVICE_CONFIG[type])} WHERE type = ${type}`;
     } catch (error) {
-      console.error(`Failed to update config for type "${type}":`, error)
+      logger.error(`Failed to update config for type "${type}":`, error)
     }
   }
 
@@ -193,19 +200,19 @@ export function useProcess() {
     spawnedProcess.on('message', (msg: { event: string, data: unknown, message: string }) => {
       switch (msg?.event) {
         case 'OnProcessStats':
-          setProcessStats('storescp_process', msg.data)
+          setProcessStats('storescp_process', msg.data as ProcessStats)
           break
         case 'OnServerStarted':
           logger.success(`Store SCP Server listening on ${msg?.data}`)
           break
         case 'OnFileStored':
           for (const eventInstance of storeSCPEventListener.filter(e => e.event === 'OnFileStored')) {
-            eventInstance.handler(msg.data)
+            eventInstance.handler(String(msg.data))
           }
           break
         case 'OnStudyCompleted':
           for (const eventInstance of storeSCPEventListener.filter(e => e.event === 'OnStudyCompleted')) {
-            eventInstance.handler(msg.data)
+            eventInstance.handler(String(msg.data))
           }
           break
         default:

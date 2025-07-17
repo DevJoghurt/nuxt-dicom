@@ -4,30 +4,34 @@ import { defineNitroPlugin, useProcess, useRuntimeConfig } from '#imports'
 const PROCESS_FILE = 'storescp.js'
 
 export default defineNitroPlugin(async (nitro) => {
-  const { storeSCP } = useRuntimeConfig().dicom
+  const { servicePaths } = useRuntimeConfig().dicom
 
-  let scriptPath = storeSCP.scriptPath
+  let scriptPath = servicePaths.storescp
   const isDev = scriptPath === 'build' ? false : true
 
   if (!isDev) {
     scriptPath = join(dirname(process.argv[1]), PROCESS_FILE)
   }
 
-  const { launchProcess, closeProcess } = useProcess()
+  const { launchProcess, closeProcess, getServiceConfig } = useProcess()
 
-  launchProcess(scriptPath, {
-    name: 'storescp_process',
-    logs: {
-      inMemory: true,
-      inMemoryLimit: 100,
-    },
-    env: {
-      port: storeSCP.port.toString(),
-      outDir: storeSCP.outDir,
-    },
-  })
+  const config = await getServiceConfig('storeSCP')
 
-  nitro.hooks.hook('close', async () => {
-    await closeProcess('storescp_process')
-  })
+  if(config.enabled === true) {
+    launchProcess(scriptPath, {
+      name: 'storescp_process',
+      logs: {
+        inMemory: true,
+        inMemoryLimit: 100,
+      },
+      env: {
+        port: config?.port?.toString() || '104',
+        outDir: config?.outDir || '',
+      },
+    })
+
+    nitro.hooks.hook('close', async () => {
+      await closeProcess('storescp_process')
+    })
+  }
 })

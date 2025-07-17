@@ -1,13 +1,11 @@
 <template>
-  <div class="px-8 py-6">
-    <section class="flex justify-between items-center">
+  <section class="">
+    <!--Headerbar-->
+    <div class="flex justify-between items-center px-8 py-2 border-b border-gray-200">
       <div>
         <h1 class="text-xl font-bold">
-          DICOM StoreSCP
+          StoreSCP
         </h1>
-        <p class="text-sm font-thin text-gray-500">
-          Service is listening on {{ service?.server?.port }}
-        </p>
       </div>
       <div>
         <UDropdownMenu
@@ -18,106 +16,37 @@
             icon="i-heroicons-cog-8-tooth"
             color="neutral"
             variant="outline"
+            class="cursor-pointer"
           />
         </UDropdownMenu>
       </div>
-    </section>
-    <div class="flex flex-col lg:flex-row py-8 space-y-4 lg:space-y-0 lg:space-x-4">
-      <div class="w-full lg:w-2/3">
-        <UCard
-          class="w-full"
-          :ui=" {
-            body: 'bg-zinc-800 text-white text-xs font-thin rounded-b-[calc(var(--ui-radius)*2)]',
-          }"
-        >
-          <template #header>
-            <h2 class="text-lg font-bold">
-              Logs
-            </h2>
-          </template>
-          <div>
-            <pre v-if="!service?.logs?.value || service?.logs?.value.length === 0">No logs</pre>
-            <div
-              v-for="log of service?.logs?.value"
-              v-else
-              :key="log"
-            >
-              {{ log }}
-            </div>
-          </div>
-        </UCard>
-      </div>
-      <div class="w-full lg:w-1/3">
-        <UCard>
-          <template #header>
-            <h2 class="text-lg font-bold">
-              Status
-            </h2>
-          </template>
-          <div>
-            <div class="flex flex-col space-y-4">
-              <div>
-                <p class="text-xs font-thin text-gray-500">
-                  Status
-                </p>
-                <UBadge
-                  v-if="service?.process?.status === 'running'"
-                  label="Running"
-                  color="success"
-                />
-                <UBadge
-                  v-if="service?.process?.status === 'stopped'"
-                  label="Stopped"
-                  color="info"
-                />
-              </div>
-              <div>
-                <p class="text-xs font-thin text-gray-500">
-                  CPU Usage
-                </p>
-                <p class="text-sm font-bold">
-                  {{ service?.stats?.cpu?.count || 'no data' }} /
-                  {{ service?.stats?.cpu?.usage || 'no data' }}
-                </p>
-              </div>
-              <div>
-                <p class="text-xs font-thin text-gray-500">
-                  Memory Usage
-                </p>
-                <p class="text-sm font-bold">
-                  {{ service?.stats?.memory?.rss || 'no data' }} /
-                  {{ service?.stats?.memory?.heapTotal || 'no data' }} /
-                  {{ service?.stats?.memory?.heapUsed || 'no data' }} /
-                  {{ service?.stats?.memory?.external || 'no data' }}
-                </p>
-              </div>
-              <div>
-                <p class="text-xs font-thin text-gray-500">
-                  Created at
-                </p>
-                <p class="text-sm font-bold">
-                  <ClientOnly>
-                    {{ new Date((service?.process?.createdAt || 0)).toLocaleString() }}
-                  </ClientOnly>
-                </p>
-              </div>
-              <div>
-                <p class="text-xs font-thin text-gray-500">
-                  Restarts
-                </p>
-                <p class="text-sm font-bold">
-                  {{ service?.process?.restarts }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </UCard>
-      </div>
     </div>
-  </div>
+    <!--Content-->
+    <div class="flex h-[calc(100vh-64px)]">
+        <!--Left Sidebar-->
+        <div class="w-64 border-r border-gray-200">
+          <UNavigationMenu
+            color="neutral"
+            :items="navItems"
+            :ui="{
+              root: 'justify-between py-2',
+              // only first item in the list flex-1
+              list: 'first:flex-1',
+              label: 'gap-2'
+            }"
+            orientation="vertical"
+            class="h-full" />
+        </div>
+        <!--Main Content-->
+        <div class="flex-1 p-4">
+
+        </div>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
+import type { NavigationMenuItem } from '@nuxt/ui'
 import { useFetch, onMounted, onBeforeUnmount, ref, computed } from '#imports'
 
   type Service = {
@@ -131,6 +60,33 @@ import { useFetch, onMounted, onBeforeUnmount, ref, computed } from '#imports'
       port: number
     }
   }
+
+  const navItems = ref<NavigationMenuItem[][]>([
+    [{
+      label: 'Overview',
+      icon: 'i-heroicons-chart-pie',
+      to: '/storescp/overview',
+    },{
+      label: 'Events',
+      icon: 'i-heroicons-bell',
+      to: '/storescp/instances',
+    },{
+      label: 'Services',
+      icon: 'i-heroicons-server',
+      to: '/storescp/services',
+    },{
+      label: 'Logs',
+      icon: 'i-heroicons-document-text',
+      to: '/storescp/logs',
+    }],
+    [
+      {
+        label: 'Configuration',
+        icon: 'i-heroicons-cog-6-tooth',
+        to: '/storescp/configuration',
+      },
+    ]
+  ])
 
 const intval = ref<ReturnType<typeof setInterval> | null>(null)
 

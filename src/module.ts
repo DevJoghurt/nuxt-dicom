@@ -2,14 +2,14 @@ import { cpSync } from 'node:fs'
 import { join } from 'node:path'
 import { defineNuxtModule, createResolver, addServerScanDir, logger, addComponent } from '@nuxt/kit'
 import defu from 'defu'
+import type { StoreSCPConfig } from './runtime/types'
 
 // Module options TypeScript interface definition
 export interface ModuleOptions {
-  storeSCP: {
-    enabled: boolean
-    port: number
-    outDir: string
-  }
+  servicePaths?: {
+    storescp: string
+  },
+  storeSCP: StoreSCPConfig
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -20,9 +20,7 @@ export default defineNuxtModule<ModuleOptions>({
   // Default configuration options of the Nuxt module
   defaults: {
     storeSCP: {
-      enabled: true,
-      port: 1223,
-      outDir: 'tmp',
+      enabled: false
     },
   },
   async setup(_options, _nuxt) {
@@ -36,50 +34,49 @@ export default defineNuxtModule<ModuleOptions>({
       global: true,
     })
 
+    const runtimeConfig = _nuxt.options.runtimeConfig
+
+    runtimeConfig.dicom = defu(runtimeConfig?.dicom || {}, {
+      servicePaths: {
+        storescp: _options.servicePaths?.storescp || _nuxt.options.dev ? resolver.resolve('./runtime/storescp/server.js') : 'build',
+      },
+      // add _options with servicePaths
+      storeSCP: _options.storeSCP,
+    })
+
     // add @nuxthealth/node-dicom to externals tracing because Store SCP Server is not part of nuxt build process
-    if (_options.storeSCP.enabled) {
-      _nuxt.hook('nitro:config', (nitroConfig) => {
-        if (!nitroConfig.externals?.traceInclude) {
-          nitroConfig.externals = defu(_nuxt.options.nitro.externals || {}, {
-            traceInclude: [],
-          })
-        }
-        nitroConfig.externals.traceInclude?.push('node_modules/@nuxthealth/node-dicom/index.js') // add dicom module to externals
-
-        // add websocket support
-        nitroConfig.experimental = defu(nitroConfig.experimental, {
-          websocket: true,
-          database: true
+    _nuxt.hook('nitro:config', (nitroConfig) => {
+      if (!nitroConfig.externals?.traceInclude) {
+        nitroConfig.externals = defu(_nuxt.options.nitro.externals || {}, {
+          traceInclude: [],
         })
+      }
+      nitroConfig.externals.traceInclude?.push('node_modules/@nuxthealth/node-dicom/index.js') // add dicom module to externals
 
-        // add database for DICOM related data that need persistence
-        nitroConfig.database = defu(nitroConfig.database, {
-          dicom: {
-            connector: 'sqlite',
-            options: {
-              name: 'dicom'
-            }
+      // add websocket support
+      nitroConfig.experimental = defu(nitroConfig.experimental, {
+        websocket: true,
+        database: true
+      })
+
+      // add database for DICOM related data that need persistence
+      nitroConfig.database = defu(nitroConfig.database, {
+        dicom: {
+          connector: 'sqlite',
+          options: {
+            name: 'dicom'
           }
-        })
-
+        }
       })
 
-      const storeSCPScriptPath = _nuxt.options.dev ? resolver.resolve('./runtime/storescp/server.js') : 'build'
+    })
 
-      const runtimeConfig = _nuxt.options.runtimeConfig
-      runtimeConfig.dicom = defu(runtimeConfig?.dicom || {}, {
-        storeSCP: {
-          scriptPath: storeSCPScriptPath,
-          port: _options.storeSCP.port,
-          outDir: _options.storeSCP.outDir,
-        },
-      })
+    // add storescp server to nitro build
+    _nuxt.hook('nitro:build:public-assets', async (nitro) => {
+      const targetDir = join(nitro.options.output.serverDir, './storescp.js')
+      cpSync(resolver.resolve('./runtime/storescp/server.js'), targetDir, { recursive: true })
+      logger.success('Added DICOM StoreSCP to output')
+    })
 
-      _nuxt.hook('nitro:build:public-assets', async (nitro) => {
-        const targetDir = join(nitro.options.output.serverDir, './storescp.js')
-        cpSync(resolver.resolve('./runtime/storescp/server.js'), targetDir, { recursive: true })
-        logger.success('Added DICOM StoreSCP to output')
-      })
-    }
   },
 })
