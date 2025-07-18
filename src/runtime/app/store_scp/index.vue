@@ -39,7 +39,9 @@
         </div>
         <!--Main Content-->
         <div class="flex-1 p-4">
-
+          <Router v-slot="props">
+            <component :is="props.component" />
+          </Router>
         </div>
     </div>
   </section>
@@ -48,6 +50,7 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
 import { useFetch, onMounted, onBeforeUnmount, ref, computed } from '#imports'
+import Router from './router.vue'
 
   type Service = {
     process: {
@@ -65,25 +68,55 @@ import { useFetch, onMounted, onBeforeUnmount, ref, computed } from '#imports'
     [{
       label: 'Overview',
       icon: 'i-heroicons-chart-pie',
-      to: '/storescp/overview',
+      onSelect: async () => {
+          await navigateTo({
+            query: {
+              page: 'overview'
+            },
+          })
+      },
     },{
       label: 'Events',
       icon: 'i-heroicons-bell',
-      to: '/storescp/instances',
+      onSelect: async () => {
+          await navigateTo({
+            query: {
+              page: 'events'
+            },
+          })
+      },
     },{
       label: 'Services',
       icon: 'i-heroicons-server',
-      to: '/storescp/services',
+      onSelect: async () => {
+          await navigateTo({
+            query: {
+              page: 'services'
+            },
+          })
+      },
     },{
       label: 'Logs',
       icon: 'i-heroicons-document-text',
-      to: '/storescp/logs',
+      onSelect: async () => {
+          await navigateTo({
+            query: {
+              page: 'logs'
+            },
+          })
+      },
     }],
     [
       {
         label: 'Configuration',
         icon: 'i-heroicons-cog-6-tooth',
-        to: '/storescp/configuration',
+        onSelect: async () => {
+            await navigateTo({
+              query: {
+                page: 'configuration'
+              },
+            })
+        },
       },
     ]
   ])
