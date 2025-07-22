@@ -16,7 +16,6 @@
 
 	const component = shallowRef<typeof Overview | null>(null)
 
-
 	const navigate = async (page: string) => {
 		if (page === 'overview') {
 			component.value = Overview

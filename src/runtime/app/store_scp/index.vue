@@ -1,13 +1,33 @@
 <template>
   <section class="">
     <!--Headerbar-->
-    <div class="flex justify-between items-center px-8 py-2 border-b border-gray-200">
-      <div>
+    <div
+      :class="[
+        'flex items-center px-8 border-b border-gray-200',
+        {
+          'py-4 justify-between' : navbar === 'vertical'
+        }]">
+      <div class="flex-none">
         <h1 class="text-xl font-bold">
           StoreSCP
         </h1>
       </div>
-      <div>
+      <div
+        :class="{
+          'flex-1 flex justify-between items-center w-full': navbar === 'horizontal'
+        }">
+        <UNavigationMenu
+            v-if="navbar === 'horizontal'"
+            color="neutral"
+            :items="navItems"
+            :ui="{
+              root: 'justify-between py-2',
+              // only first item in the list flex-1
+              list: 'first:flex-1',
+              label: 'gap-2'
+            }"
+            orientation="horizontal"
+            class="px-8" />
         <UDropdownMenu
           :items="dropdownItems"
         >
@@ -22,9 +42,12 @@
       </div>
     </div>
     <!--Content-->
-    <div class="flex h-[calc(100vh-64px)]">
+    <div
+      :class="{
+          'flex h-[calc(100vh-65px)]': navbar === 'vertical'
+        }">
         <!--Left Sidebar-->
-        <div class="w-64 border-r border-gray-200">
+        <div v-if="navbar === 'vertical'" class="w-64 border-r border-gray-200">
           <UNavigationMenu
             color="neutral"
             :items="navItems"
@@ -38,7 +61,11 @@
             class="h-full" />
         </div>
         <!--Main Content-->
-        <div class="flex-1 p-4">
+        <div
+          :class="{
+            'px-8 py-4': navbar === 'horizontal',
+            'flex-1 p-4': navbar === 'vertical'
+          }">
           <Router v-slot="props">
             <component :is="props.component" />
           </Router>
@@ -48,9 +75,13 @@
 </template>
 
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui'
-import { useFetch, onMounted, onBeforeUnmount, ref, computed } from '#imports'
-import Router from './router.vue'
+  import type { NavigationMenuItem } from '@nuxt/ui'
+  import { useFetch, onMounted, onBeforeUnmount, ref, computed } from '#imports'
+  import Router from './router.vue'
+
+  const { navbar = 'horizontal' } =defineProps<{
+    navbar?: 'vertical' | 'horizontal'
+  }>()
 
   type Service = {
     process: {

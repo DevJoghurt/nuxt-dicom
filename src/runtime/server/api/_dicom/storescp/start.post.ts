@@ -4,7 +4,7 @@ import { defineEventHandler, useProcess, useRuntimeConfig } from '#imports'
 const PROCESS_FILE = 'storescp.js'
 
 export default defineEventHandler(async () => {
-  const { launchProcess, getProcessInstance } = useProcess()
+  const { launchProcess, getProcessInstance, getServiceConfig } = useProcess()
 
   const processInstance = getProcessInstance('storescp_process')
 
@@ -15,9 +15,11 @@ export default defineEventHandler(async () => {
     }
   }
 
-  const { storeSCP } = useRuntimeConfig().dicom
+  const serviceConfig = await getServiceConfig('storeSCP')
 
-  let scriptPath = storeSCP.scriptPath
+  const { servicePaths } = useRuntimeConfig().dicom
+
+  let scriptPath = servicePaths.storeSCP || 'build'
   const isDev = scriptPath === 'build' ? false : true
 
   if (!isDev) {
@@ -30,10 +32,7 @@ export default defineEventHandler(async () => {
       inMemory: true,
       inMemoryLimit: 100,
     },
-    env: {
-      port: storeSCP.port.toString(),
-      outDir: storeSCP.outDir,
-    },
+    env: serviceConfig,
   })
 
   return {

@@ -1,6 +1,6 @@
 <template>
   <UApp>
-    <StoreSCP />
+    <StoreSCP navbar="horizontal" />
   </UApp>
 </template>
 

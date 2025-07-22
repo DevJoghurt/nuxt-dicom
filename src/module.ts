@@ -7,7 +7,7 @@ import type { StoreSCPConfig } from './runtime/types'
 // Module options TypeScript interface definition
 export interface ModuleOptions {
   servicePaths?: {
-    storescp: string
+    storeSCP: string
   },
   storeSCP: StoreSCPConfig
 }
@@ -38,7 +38,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     runtimeConfig.dicom = defu(runtimeConfig?.dicom || {}, {
       servicePaths: {
-        storescp: _options.servicePaths?.storescp || _nuxt.options.dev ? resolver.resolve('./runtime/storescp/server.js') : 'build',
+        storeSCP: _options.servicePaths?.storeSCP || _nuxt.options.dev ? resolver.resolve('./runtime/storescp/server.js') : 'build',
       },
       // add _options with servicePaths
       storeSCP: _options.storeSCP,
