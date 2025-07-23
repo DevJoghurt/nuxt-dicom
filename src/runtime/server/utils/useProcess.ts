@@ -1,14 +1,8 @@
 import { fork, type ChildProcess } from 'node:child_process'
 import { consola } from 'consola'
 import { defu } from 'defu'
-import { getStoreSCPEventListener } from '#imports'
-import type { StoreSCPConfig } from '../../types'
-
-type ProcessServiceTypes = 'storeSCP'
-
-type ProcessServiceConfig = {
-	storeSCP: StoreSCPConfig
-}
+import { getStoreSCPEventListener, DicomConfigSchemas } from '#imports'
+import type { ProcessServiceConfig, ProcessServiceTypes } from './schema'
 
 type ProcessStats = {
   timestamp: number
@@ -54,9 +48,7 @@ type LaunchProcessOptions = {
   }
 }
 
-const PROCESS_SERVICE_CONFIG = {
-  storeSCP: {}
-} as ProcessServiceConfig
+const PROCESS_SERVICES = ['storeSCP']
 
 const processInstances = [] as ProcessInstance[]
 
@@ -82,29 +74,37 @@ export function useProcess() {
    * @returns Process service configuration
    */
   const getServiceConfig = async <T extends ProcessServiceTypes>(type: T): Promise<ProcessServiceConfig[T]> => {
-      if (!PROCESS_SERVICE_CONFIG[type]) {
-        throw new Error(`Process service config for type "${type}" is not defined.`)
-      }
-      const { dicom } = useRuntimeConfig()
-      // merge runtime config with cached config
-      PROCESS_SERVICE_CONFIG[type] = defu(PROCESS_SERVICE_CONFIG[type], dicom[type] || {})
-      //get config from sql db
-      const db = useDatabase('dicom')
-      if (!db) {
-        throw new Error('Database "dicom" is not defined. Please check your configuration.')
-      }
-      try {
-        const { rows } = await db.sql`SELECT config FROM services WHERE type = ${type} LIMIT 1`;
-        if (rows && rows.length > 0) {
-          const dbConfig = rows[0].config as Partial<ProcessServiceConfig[T]>
-          PROCESS_SERVICE_CONFIG[type] = defu(PROCESS_SERVICE_CONFIG[type], dbConfig) as ProcessServiceConfig[T]
-        }
-      } catch (error) {
-        logger.error(`Failed to fetch config for type "${type}":`, error)
-      }
+    if (!PROCESS_SERVICES.includes(type)) {
+      throw new Error(`Process service config for type "${type}" is not defined.`)
+    }
+    const { dicom } = useRuntimeConfig()
+    const configSchema = DicomConfigSchemas[type as keyof typeof DicomConfigSchemas]
+    if (!configSchema) {
+      throw new Error(`Configuration schema for type "${type}" is not defined.`)
+    }
 
-      return PROCESS_SERVICE_CONFIG[type] as ProcessServiceConfig[T]
-	}
+    // Hole Config aus Runtime und DB, merge sie und parse sie nur einmal
+    const db = useDatabase('dicom')
+    if (!db) {
+      throw new Error('Database "dicom" is not defined. Please check your configuration.')
+    }
+
+    let mergedConfig = dicom[type] || {}
+    try {
+      const { rows } = await db.sql`SELECT config FROM services WHERE type = ${type} LIMIT 1`
+      if (rows?.length) {
+        mergedConfig = defu(rows[0].config as Record<string, any>, mergedConfig)
+      }
+    } catch (error) {
+      logger.error(`Failed to fetch config for type "${type}":`, error)
+    }
+
+    const parsed = configSchema.safeParse(mergedConfig)
+    if (!parsed.success) {
+      throw new Error(`Config for type "${type}" is invalid: ${JSON.stringify(parsed.error)}`)
+    }
+    return parsed.data as ProcessServiceConfig[T]
+  }
 
   /**
    * Set the configuration for a specific process service.
@@ -113,14 +113,22 @@ export function useProcess() {
    * @template T Type of the process service
    */
   const setServiceConfig = async <T extends ProcessServiceTypes>(type: T, config: Partial<ProcessServiceConfig[T]>) => {
-    PROCESS_SERVICE_CONFIG[type] = defu(PROCESS_SERVICE_CONFIG[type], config) as ProcessServiceConfig[T]
+    const currentConfig = await getServiceConfig(type)
+    const mergedConfig = defu(config, currentConfig)
+    // Validate and parse config before saving
+    const configSchema = DicomConfigSchemas[type as keyof typeof DicomConfigSchemas]
+    const parsed = configSchema.safeParse(mergedConfig)
+    if (!parsed.success) {
+      throw new Error(`Config for type "${type}" is invalid: ${JSON.stringify(parsed.error)}`)
+    }
+    const updateConfig = parsed.data as ProcessServiceConfig[T]
     // save config to sql db
     const db = useDatabase('dicom')
     if (!db) {
       throw new Error('Database "dicom" is not defined. Please check your configuration.')
     }
     try {
-      await db.sql`UPDATE services SET config = ${JSON.stringify(PROCESS_SERVICE_CONFIG[type])} WHERE type = ${type}`;
+      await db.sql`UPDATE services SET config = ${JSON.stringify(updateConfig)} WHERE type = ${type}`;
     } catch (error) {
       logger.error(`Failed to update config for type "${type}":`, error)
     }

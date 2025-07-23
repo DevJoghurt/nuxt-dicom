@@ -2,7 +2,7 @@ import { cpSync } from 'node:fs'
 import { join } from 'node:path'
 import { defineNuxtModule, createResolver, addServerScanDir, logger, addComponent } from '@nuxt/kit'
 import defu from 'defu'
-import type { StoreSCPConfig } from './runtime/types'
+import type { StoreSCPConfig } from './runtime/server/utils/schema'
 
 // Module options TypeScript interface definition
 export interface ModuleOptions {

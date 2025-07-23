@@ -30,6 +30,7 @@
             class="px-8" />
         <UDropdownMenu
           :items="dropdownItems"
+          @update:open="refreshService"
         >
           <UButton
             label="Process"
@@ -76,7 +77,7 @@
 
 <script setup lang="ts">
   import type { NavigationMenuItem } from '@nuxt/ui'
-  import { useFetch, onMounted, onBeforeUnmount, ref, computed } from '#imports'
+  import { useFetch, ref, computed } from '#imports'
   import Router from './router.vue'
 
   const { navbar = 'horizontal' } =defineProps<{
@@ -152,8 +153,6 @@
     ]
   ])
 
-const intval = ref<ReturnType<typeof setInterval> | null>(null)
-
 const {
   data: service,
   refresh: refreshService,
@@ -190,15 +189,4 @@ const processAction = async (action: 'start' | 'stop' | 'restart') => {
   })
 }
 
-onMounted(() => {
-  intval.value = setInterval(() => {
-    refreshService()
-  }, 5000)
-})
-
-onBeforeUnmount(() => {
-  if (intval.value) {
-    clearInterval(intval.value)
-  }
-})
 </script>

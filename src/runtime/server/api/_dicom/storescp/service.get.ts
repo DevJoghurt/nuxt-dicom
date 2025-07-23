@@ -1,11 +1,11 @@
 import { defineEventHandler, useRuntimeConfig, useProcess } from '#imports'
 
 export default defineEventHandler(async () => {
-  const { storeSCP } = useRuntimeConfig().dicom
-
-  const { getProcessInstance } = useProcess ()
+  const { getProcessInstance, getServiceConfig } = useProcess()
 
   const processInstance = getProcessInstance('storescp_process')
+
+  const config = await getServiceConfig('storeSCP')
 
   return {
     status: 200,
@@ -17,8 +17,6 @@ export default defineEventHandler(async () => {
     },
     logs: processInstance?.logs,
     stats: processInstance?.stats,
-    server: {
-      port: storeSCP.port,
-    },
+    config
   }
 })

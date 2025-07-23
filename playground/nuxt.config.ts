@@ -7,5 +7,6 @@ export default defineNuxtConfig({
     enabled: true,
   },
   css: ['~/assets/tailwind.css'],
-  dicom: {},
+  dicom: {
+  },
 })
