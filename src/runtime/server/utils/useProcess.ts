@@ -91,7 +91,7 @@ export function useProcess() {
 
     let mergedConfig = dicom[type] || {}
     try {
-      const { rows } = await db.sql`SELECT config FROM services WHERE type = ${type} LIMIT 1`
+      const { rows } = await db.sql`SELECT config FROM process WHERE type = ${type} LIMIT 1`
       if (rows?.length) {
         mergedConfig = defu(rows[0].config as Record<string, any>, mergedConfig)
       }
@@ -128,7 +128,12 @@ export function useProcess() {
       throw new Error('Database "dicom" is not defined. Please check your configuration.')
     }
     try {
-      await db.sql`UPDATE services SET config = ${JSON.stringify(updateConfig)} WHERE type = ${type}`;
+      // Try to update first
+      const updateResult = await db.sql`UPDATE process SET config = ${JSON.stringify(updateConfig)} WHERE type = ${type}`;
+      // If no row was updated, insert new
+      if (updateResult.changes === 0) {
+        await db.sql`INSERT INTO process (type, config) VALUES (${type}, ${JSON.stringify(updateConfig)})`;
+      }
     } catch (error) {
       logger.error(`Failed to update config for type "${type}":`, error)
     }

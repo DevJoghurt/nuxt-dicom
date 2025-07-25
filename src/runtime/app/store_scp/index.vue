@@ -77,7 +77,7 @@
 
 <script setup lang="ts">
   import type { NavigationMenuItem } from '@nuxt/ui'
-  import { useFetch, ref, computed } from '#imports'
+  import { useFetch, computed } from '#imports'
   import Router from './router.vue'
 
   const { navbar = 'horizontal' } =defineProps<{
@@ -96,7 +96,7 @@
     }
   }
 
-  const navItems = ref<NavigationMenuItem[][]>([
+  const navItems = computed<NavigationMenuItem[][]>(() =>[
     [{
       label: 'Overview',
       icon: 'i-heroicons-chart-pie',

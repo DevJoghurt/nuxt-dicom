@@ -17,7 +17,7 @@ export default defineNitroPlugin(async (nitro) => {
 
   const config = await getServiceConfig('storeSCP')
 
-  if(config.enabled === true) {
+  if(config.autorun === true) {
     launchProcess(scriptPath, {
       name: 'storescp_process',
       logs: {

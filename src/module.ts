@@ -19,9 +19,7 @@ export default defineNuxtModule<ModuleOptions>({
   },
   // Default configuration options of the Nuxt module
   defaults: {
-    storeSCP: {
-      enabled: false
-    },
+    storeSCP: {}
   },
   async setup(_options, _nuxt) {
     const resolver = createResolver(import.meta.url)
