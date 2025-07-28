@@ -91,9 +91,10 @@ export function useProcess() {
 
     let mergedConfig = dicom[type] || {}
     try {
-      const { rows } = await db.sql`SELECT config FROM process WHERE type = ${type} LIMIT 1`
+      const { rows } = await db.sql`SELECT json_extract(config, '$') AS config FROM process WHERE type = ${type} LIMIT 1`
       if (rows?.length) {
-        mergedConfig = defu(rows[0].config as Record<string, any>, mergedConfig)
+        const dbConfig = JSON.parse(String(rows[0]?.config)) || {}
+        mergedConfig = defu(dbConfig, mergedConfig)
       }
     } catch (error) {
       logger.error(`Failed to fetch config for type "${type}":`, error)
@@ -103,6 +104,7 @@ export function useProcess() {
     if (!parsed.success) {
       throw new Error(`Config for type "${type}" is invalid: ${JSON.stringify(parsed.error)}`)
     }
+
     return parsed.data as ProcessServiceConfig[T]
   }
 
@@ -129,10 +131,10 @@ export function useProcess() {
     }
     try {
       // Try to update first
-      const updateResult = await db.sql`UPDATE process SET config = ${JSON.stringify(updateConfig)} WHERE type = ${type}`;
+      const updateResult = await db.sql`UPDATE process SET config = json(${JSON.stringify(updateConfig)}) WHERE type = ${type}`;
       // If no row was updated, insert new
       if (updateResult.changes === 0) {
-        await db.sql`INSERT INTO process (type, config) VALUES (${type}, ${JSON.stringify(updateConfig)})`;
+        await db.sql`INSERT INTO process (type, config) VALUES (${type}, json(${JSON.stringify(updateConfig)}))`;
       }
     } catch (error) {
       logger.error(`Failed to update config for type "${type}":`, error)
@@ -244,9 +246,12 @@ export function useProcess() {
     }
     const script = processInstance.script
     const restarts = processInstance.restarts
+
+    const config = await getServiceConfig('storeSCP')
+
     const opts = {
       name: name,
-      env: processInstance?.env,
+      env: config as Record<string, string>,
       logs: {
         inMemory: processInstance?.logs.inMemory,
         inMemoryLimit: processInstance?.logs.inMemoryLimit,

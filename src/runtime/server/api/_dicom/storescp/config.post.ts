@@ -9,8 +9,15 @@ export default defineEventHandler(async (event) => {
 			message: 'Invalid configuration data'
 		}
 	}
-	const { setServiceConfig } = useProcess()
+	const { setServiceConfig, restartProcess, getProcessInstance } = useProcess()
 	const config = await setServiceConfig('storeSCP', body.data)
+
+	const processInstance = getProcessInstance('storescp_process')
+
+	if(processInstance && processInstance.status === 'running') {
+		await restartProcess('storescp_process')
+	}
+
 	return {
 		status: 'success',
 		message: 'Configuration updated successfully',

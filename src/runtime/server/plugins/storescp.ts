@@ -6,7 +6,7 @@ const PROCESS_FILE = 'storescp.js'
 export default defineNitroPlugin(async (nitro) => {
   const { servicePaths } = useRuntimeConfig().dicom
 
-  let scriptPath = servicePaths.storescp
+  let scriptPath = servicePaths.storeSCP
   const isDev = scriptPath === 'build' ? false : true
 
   if (!isDev) {
@@ -24,10 +24,7 @@ export default defineNitroPlugin(async (nitro) => {
         inMemory: true,
         inMemoryLimit: 100,
       },
-      env: {
-        port: config?.port?.toString() || '104',
-        outDir: config?.outDir || '',
-      },
+      env: config as Record<string, string>
     })
 
     nitro.hooks.hook('close', async () => {

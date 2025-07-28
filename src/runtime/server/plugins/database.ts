@@ -8,7 +8,7 @@ export default defineNitroPlugin(async (nitro) => {
     // Haupttabelle: Prozess
     await db.sql`
         CREATE TABLE IF NOT EXISTS process (
-            "id" TEXT PRIMARY KEY,
+            "id" INTEGER PRIMARY KEY  AUTOINCREMENT,
             "type" TEXT,
             "status" TEXT,
             "config" JSON,
@@ -29,7 +29,7 @@ export default defineNitroPlugin(async (nitro) => {
     // Event-Service-Tabelle
     await db.sql`
         CREATE TABLE IF NOT EXISTS event_service (
-            "id" TEXT PRIMARY KEY,
+            "id" INTEGER PRIMARY KEY  AUTOINCREMENT,
             "name" TEXT UNIQUE,
             "config" JSON,
             "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -50,8 +50,8 @@ export default defineNitroPlugin(async (nitro) => {
     await db.sql`
         CREATE TABLE IF NOT EXISTS event_service_trigger (
             "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-            "eventServiceId" TEXT,
-            "processId" TEXT,
+            "eventServiceId" INTEGER,
+            "processId" INTEGER,
             "triggeredAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (eventServiceId) REFERENCES event_service(id) ON DELETE CASCADE,
             FOREIGN KEY (processId) REFERENCES process(id) ON DELETE CASCADE
@@ -71,7 +71,7 @@ export default defineNitroPlugin(async (nitro) => {
     await db.sql`
         CREATE TABLE IF NOT EXISTS process_log (
             "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-            "processId" TEXT,
+            "processId" INTEGER,
             "message" TEXT,
             "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (processId) REFERENCES process(id) ON DELETE CASCADE
@@ -81,7 +81,7 @@ export default defineNitroPlugin(async (nitro) => {
     await db.sql`
         CREATE TABLE IF NOT EXISTS process_event (
             "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-            "processId" TEXT,
+            "processId" INTEGER,
             "type" TEXT,
             "data" JSON,
             "createdAt" DATETIME DEFAULT CURRENT_TIMESTAMP,

@@ -68,7 +68,6 @@
     </UCard>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref, useTemplateRef } from '#imports'
 import { DicomConfigSchemas } from '../../../server/utils/schema'
