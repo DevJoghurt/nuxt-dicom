@@ -20,10 +20,6 @@ export default defineNitroPlugin(async (nitro) => {
   if(config.autorun === true) {
     launchProcess(scriptPath, {
       name: 'storescp_process',
-      logs: {
-        inMemory: true,
-        inMemoryLimit: 100,
-      },
       env: config as Record<string, string>
     })
 

@@ -13,9 +13,6 @@
         <UFormField label="Keep Alive">
           <USwitch v-model="state.keepAlive" />
         </UFormField>
-        <UFormField label="Study Timeout (s)">
-          <UInput v-model="state.studyTimeout" type="number" class="w-full px-2 py-1 rounded bg-gray-50 border border-gray-200" />
-        </UFormField>
         <UFormField label="Calling AE Title">
           <UInput v-model="state.callingAETitle" type="text" class="w-full px-2 py-1 rounded bg-gray-50 border border-gray-200" />
         </UFormField>

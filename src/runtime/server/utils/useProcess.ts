@@ -26,11 +26,6 @@ type ProcessInstance = {
   script: string
   status: 'running' | 'stopped' | 'error'
   process: ChildProcess
-  logs: {
-    inMemory: boolean
-    inMemoryLimit: number
-    value: string[]
-  }
   createdAt: number
   env?: Record<string, string>
   healthcheck: ReturnType<typeof setInterval>
@@ -42,10 +37,6 @@ type LaunchProcessOptions = {
   name?: string
   cwd?: string
   env?: Record<string, string>
-  logs?: {
-    inMemory?: boolean
-    inMemoryLimit?: number
-  }
 }
 
 const PROCESS_SERVICES = ['storeSCP']
@@ -59,10 +50,16 @@ export function useProcess() {
     return processInstances.find(w => w.name === name)
   }
 
-  const logs = (process: string) => {
-    const processInstance = getProcessInstance(process)
+  const logs = async (processName: string) => {
+    const processInstance = getProcessInstance(processName)
     if (processInstance) {
-      return processInstance.logs.value
+      // query sqlite db for logs
+      const db = useDatabase('dicom')
+      if (!db) {
+        throw new Error('Database "dicom" is not defined. Please check your configuration.')
+      }
+      const logs = await db.sql`SELECT * FROM process_logs WHERE process_id = ${processInstance.id}`
+      return logs
     }
     return []
   }
