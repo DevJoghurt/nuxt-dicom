@@ -1,6 +1,6 @@
 <template>
   <UApp>
-    <StoreSCP navbar="horizontal" />
+    <NuxtPage />
   </UApp>
 </template>
 
