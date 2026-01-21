@@ -1,4 +1,4 @@
-import { defineNuxtModule, createResolver, addServerScanDir, addComponent, addComponentsDir, addTemplate, updateTemplates, extendPages, addServerImports } from '@nuxt/kit'
+import { defineNuxtModule, createResolver, addServerScanDir, addComponent, addComponentsDir, addTemplate, updateTemplates, extendPages, addServerImports, addImports } from '@nuxt/kit'
 import { join } from 'node:path'
 import { readFileSync } from 'node:fs'
 import defu from 'defu'
@@ -57,7 +57,7 @@ export default defineNuxtModule<ModuleOptions>({
     addServerScanDir(resolver.resolve('./runtime/server'))
     // add all libs to server imports
     addServerImports([{
-      from: resolver.resolve('./runtime/utils/storeSCPManager'),
+      from: resolver.resolve('./runtime/utils/services'),
       name: 'storeSCPServiceManager',
     }, {
       from: resolver.resolve('./runtime/utils/serviceRegistry'),
@@ -94,6 +94,12 @@ export default defineNuxtModule<ModuleOptions>({
     addComponent({
       name: 'DicomApp',
       filePath: resolver.resolve('./runtime/app/pages/index.vue'),
+    })
+
+    // Add auto-imports for composables
+    addImports({
+      name: 'useLiveServiceLogs',
+      from: resolver.resolve('./runtime/app/composables/useLiveServiceLogs'),
     })
 
     // Add route if enabled

@@ -1000,12 +1000,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@iconify-json/lucide@npm:^1.2.84":
-  version: 1.2.84
-  resolution: "@iconify-json/lucide@npm:1.2.84"
+"@iconify-json/lucide@npm:^1.2.86":
+  version: 1.2.86
+  resolution: "@iconify-json/lucide@npm:1.2.86"
   dependencies:
     "@iconify/types": "npm:*"
-  checksum: 10c0/502060ceb77b2abda1d60aa22b5bf270916b2e31dba4037501bc2f2d9ecd5112d027b9965c3e9bded3c80dfbbed684dd1de59c1ec281d17227d373c5af10217d
+  checksum: 10c0/651a5a1b95126cdfe7fbce52c13b0ec25e2f787448cbf14e86b537a2b897a1d75f02293e87c1765bf7eef57ef61e3c921ca554d74cb261ef432ada6afefe5bc2
   languageName: node
   linkType: hard
 
@@ -1898,7 +1898,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nuxthealth/dicom@workspace:."
   dependencies:
-    "@iconify-json/lucide": "npm:^1.2.84"
+    "@iconify-json/lucide": "npm:^1.2.86"
     "@nhealth/nutils": "npm:^0.0.3"
     "@nuxt/devtools": "npm:^3.1.1"
     "@nuxt/eslint-config": "npm:^1.12.1"
@@ -1907,13 +1907,13 @@ __metadata:
     "@nuxt/schema": "npm:^4.2.2"
     "@nuxt/test-utils": "npm:^3.23.0"
     "@nuxt/ui": "npm:4.3.0"
-    "@nuxthealth/node-dicom": "npm:0.2.0"
-    "@types/node": "npm:^25.0.7"
+    "@nuxthealth/node-dicom": "npm:0.2.1"
+    "@types/node": "npm:^25.0.9"
     bumpp: "npm:10.4.0"
     changelogen: "npm:^0.6.2"
     defu: "npm:^6.1.4"
     eslint: "npm:^9.39.2"
-    happy-dom: "npm:^20.1.0"
+    happy-dom: "npm:^20.3.4"
     nuxi: "npm:^3.32.0"
     nuxt: "npm:^4.2.2"
     nuxt-mcp-dev: "npm:^0.3.2"
@@ -1926,50 +1926,50 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nuxthealth/node-dicom-darwin-arm64@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@nuxthealth/node-dicom-darwin-arm64@npm:0.2.0"
+"@nuxthealth/node-dicom-darwin-arm64@npm:0.2.1":
+  version: 0.2.1
+  resolution: "@nuxthealth/node-dicom-darwin-arm64@npm:0.2.1"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@nuxthealth/node-dicom-darwin-x64@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@nuxthealth/node-dicom-darwin-x64@npm:0.2.0"
+"@nuxthealth/node-dicom-darwin-x64@npm:0.2.1":
+  version: 0.2.1
+  resolution: "@nuxthealth/node-dicom-darwin-x64@npm:0.2.1"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@nuxthealth/node-dicom-linux-arm64-gnu@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@nuxthealth/node-dicom-linux-arm64-gnu@npm:0.2.0"
+"@nuxthealth/node-dicom-linux-arm64-gnu@npm:0.2.1":
+  version: 0.2.1
+  resolution: "@nuxthealth/node-dicom-linux-arm64-gnu@npm:0.2.1"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@nuxthealth/node-dicom-linux-x64-gnu@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@nuxthealth/node-dicom-linux-x64-gnu@npm:0.2.0"
+"@nuxthealth/node-dicom-linux-x64-gnu@npm:0.2.1":
+  version: 0.2.1
+  resolution: "@nuxthealth/node-dicom-linux-x64-gnu@npm:0.2.1"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@nuxthealth/node-dicom-win32-x64-msvc@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@nuxthealth/node-dicom-win32-x64-msvc@npm:0.2.0"
+"@nuxthealth/node-dicom-win32-x64-msvc@npm:0.2.1":
+  version: 0.2.1
+  resolution: "@nuxthealth/node-dicom-win32-x64-msvc@npm:0.2.1"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@nuxthealth/node-dicom@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@nuxthealth/node-dicom@npm:0.2.0"
+"@nuxthealth/node-dicom@npm:0.2.1":
+  version: 0.2.1
+  resolution: "@nuxthealth/node-dicom@npm:0.2.1"
   dependencies:
-    "@nuxthealth/node-dicom-darwin-arm64": "npm:0.2.0"
-    "@nuxthealth/node-dicom-darwin-x64": "npm:0.2.0"
-    "@nuxthealth/node-dicom-linux-arm64-gnu": "npm:0.2.0"
-    "@nuxthealth/node-dicom-linux-x64-gnu": "npm:0.2.0"
-    "@nuxthealth/node-dicom-win32-x64-msvc": "npm:0.2.0"
+    "@nuxthealth/node-dicom-darwin-arm64": "npm:0.2.1"
+    "@nuxthealth/node-dicom-darwin-x64": "npm:0.2.1"
+    "@nuxthealth/node-dicom-linux-arm64-gnu": "npm:0.2.1"
+    "@nuxthealth/node-dicom-linux-x64-gnu": "npm:0.2.1"
+    "@nuxthealth/node-dicom-win32-x64-msvc": "npm:0.2.1"
   dependenciesMeta:
     "@nuxthealth/node-dicom-darwin-arm64":
       optional: true
@@ -1981,7 +1981,7 @@ __metadata:
       optional: true
     "@nuxthealth/node-dicom-win32-x64-msvc":
       optional: true
-  checksum: 10c0/f1d642914363fa23e78ab631e3ad7576af50c059c13d5717ba9219224e263c312feac03b584c252f4f758513e342966c1e5eedcd1c871ce7c876766a1e017a5d
+  checksum: 10c0/5009fa2c68b3342d8bfa98cdaf2b4d003b878e4debbff5ffc5715fc2812106643279b7c86d9d8918cb52b807d8a23400e61697ee008115ae33ad3b2e2cc9a71e
   languageName: node
   linkType: hard
 
@@ -3636,21 +3636,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.0.0":
-  version: 20.19.27
-  resolution: "@types/node@npm:20.19.27"
-  dependencies:
-    undici-types: "npm:~6.21.0"
-  checksum: 10c0/7599c24d80465c1aa6e29b53581fc20ad8862ff33e6eef31d05c1c706868476ee57319c89b802ea972dd4d64ce86d18020aa5344f851fb59b730ea509a63300f
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^25.0.7":
-  version: 25.0.7
-  resolution: "@types/node@npm:25.0.7"
+"@types/node@npm:>=20.0.0, @types/node@npm:^25.0.9":
+  version: 25.0.9
+  resolution: "@types/node@npm:25.0.9"
   dependencies:
     undici-types: "npm:~7.16.0"
-  checksum: 10c0/a9feeb16a6487621ef96158e7a9759f89e3c1726189c7b19a9e6d3e0d581499c62e441e120e5a334e9eb01bc4d26644f27767fd5931d6d4f177d14f4f8e3f9ab
+  checksum: 10c0/a757efafe303d9c8833eb53c2e9a0981cd5ac725cdc04c5612a71db86468c938778d4fa328be4231b68fffc68258638764df7b9c69e86cf55f0bb67105eb056f
   languageName: node
   linkType: hard
 
@@ -6007,7 +5998,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"entities@npm:^4.2.0, entities@npm:^4.4.0":
+"entities@npm:^4.2.0, entities@npm:^4.4.0, entities@npm:^4.5.0":
   version: 4.5.0
   resolution: "entities@npm:4.5.0"
   checksum: 10c0/5b039739f7621f5d1ad996715e53d964035f75ad3b9a4d38c6b3804bb226e282ffeae2443624d8fdd9c47d8e926ae9ac009c54671243f0c3294c26af7cc85250
@@ -7306,16 +7297,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"happy-dom@npm:^20.1.0":
-  version: 20.1.0
-  resolution: "happy-dom@npm:20.1.0"
+"happy-dom@npm:^20.3.4":
+  version: 20.3.4
+  resolution: "happy-dom@npm:20.3.4"
   dependencies:
-    "@types/node": "npm:^20.0.0"
+    "@types/node": "npm:>=20.0.0"
     "@types/whatwg-mimetype": "npm:^3.0.2"
     "@types/ws": "npm:^8.18.1"
+    entities: "npm:^4.5.0"
     whatwg-mimetype: "npm:^3.0.0"
     ws: "npm:^8.18.3"
-  checksum: 10c0/a55b5fe6de845124644bc51184c8e761e75936de50ba5f4093ff844802d2b13f700c71a5e8236cb78c2b23c1368125b98f38e3c99e472b6d6becec7ddb720c58
+  checksum: 10c0/fba02d229d6fdefb8d17b5c987bec2d562f1b184b8bf5b69c44942a2e7432987b4bf3b2de113b19078baa46a28601402ac6142639e86093c940a1fdfaf7a36dc
   languageName: node
   linkType: hard
 
@@ -11689,13 +11681,6 @@ __metadata:
     magic-string: "npm:^0.30.21"
     unplugin: "npm:^2.3.11"
   checksum: 10c0/007bf517866a1f523aff1821ee6380f964e0eb327b3499616fe4d02bbb0b08d8295627e78cacc2218e9f352f0faf0f25ac1993d66fedbb6a53b9d8bf699fed20
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~6.21.0":
-  version: 6.21.0
-  resolution: "undici-types@npm:6.21.0"
-  checksum: 10c0/c01ed51829b10aa72fc3ce64b747f8e74ae9b60eafa19a7b46ef624403508a54c526ffab06a14a26b3120d055e1104d7abe7c9017e83ced038ea5cf52f8d5e04
   languageName: node
   linkType: hard
 

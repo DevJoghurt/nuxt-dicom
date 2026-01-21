@@ -69,7 +69,7 @@
         <!-- Tab Content -->
         <div class="space-y-6">
           <!-- Services Tab -->
-          <ServicesView
+          <ServiceItem
             v-if="activeTab === 'services'"
             :services="services"
             @start-service="handleStartService"
@@ -77,7 +77,7 @@
           />
 
           <!-- Event Handlers Tab -->
-          <EventHandlersView
+          <EventHandlerItem
             v-if="activeTab === 'handlers'"
             :handlers="handlers"
             :services="services"
@@ -90,8 +90,8 @@
 
 <script setup lang="ts">
 import { useComponentRouter, ref, computed, onMounted } from '#imports'
-import ServicesView from '../../components/ServicesView.vue'
-import EventHandlersView from '../../components/EventHandlersView.vue'
+import ServiceItem from '../../components/ServiceItem.vue'
+import EventHandlerItem from '../../components/EventHandlerItem.vue'
 
 const componentRouter = useComponentRouter()
 const activeTab = ref('services')

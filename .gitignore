@@ -9,6 +9,8 @@ tmp
 .temp
 .tmp
 .cache
+testdata
+dicom-storage
 
 # Yarn
 **/.yarn/cache

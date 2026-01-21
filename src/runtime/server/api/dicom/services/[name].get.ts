@@ -23,15 +23,36 @@ export default defineEventHandler(async (event) => {
     }
 
     const isRunning = storeSCPServiceManager.isRunning(name)
+    const config = service.config
+
+    // Convert event handlers Map to Record for JSON serialization
+    const eventHandlers: Record<string, string[]> = {}
+    for (const [eventId, handlerNames] of service.eventHandlers) {
+      eventHandlers[eventId] = handlerNames
+    }
 
     return {
       id: service.id,
-      name,
+      name: service.name,
       type: service.type,
       status: isRunning ? 'running' : 'stopped',
+      isRunning,
       createdAt: service.createdAt,
       startedAt: service.startedAt,
-      config: service.config,
+      // Flatten config fields for easier UI access
+      port: config.port,
+      callingAETitle: config.callingAETitle,
+      outDir: config.outDir,
+      autoStart: config.autoStart,
+      maxPduLength: config.maxPduLength,
+      storageBackend: config.storageBackend,
+      storeWithFileMeta: config.storeWithFileMeta,
+      verbose: config.verbose,
+      studyTimeout: config.studyTimeout,
+      // Event handlers mapped by event type
+      eventHandlers,
+      // Include full config for advanced use cases
+      config,
     }
   }
   catch (error) {
