@@ -1,19 +1,17 @@
 import { StoreScp } from '@nuxthealth/node-dicom'
-import type { StoreScpConfig } from './schema'
-import { DicomConfigSchemas } from './schema'
-import type { OnBeforeStorePayload, OnFileStoredPayload, OnStudyCompletedPayload, OnServerStartedPayload, OnErrorPayload } from './dicomEvents'
-import { dicomEventEmitter } from './dicomEvents'
-import { emitDicomEvent } from './defineDicomEvent'
-import { DICOM_EVENTS } from '../../types'
+import type { StoreScpConfig } from '../schema'
+import { DicomConfigSchemas } from '../schema'
+import type { OnBeforeStorePayload, OnFileStoredPayload, OnStudyCompletedPayload, OnServerStartedPayload, OnErrorPayload } from '../dicomEvents'
+import { dicomEventEmitter } from '../dicomEvents'
+import { emitDicomEvent } from '../defineDicomEvent'
+import { dicomLogger } from '../logger'
+import { DICOM_EVENTS } from '../../../types'
+import { BaseServiceManager } from './BaseServiceManager'
 
 /**
  * Manages lifecycle of StoreSCP service instances
  */
-export class StoreSCPServiceManager {
-  private instances: Map<string, StoreScp> = new Map()
-  private started: Set<string> = new Set()
-  private serviceConfigs: Map<string, StoreScpConfig> = new Map()
-
+export class StoreSCPServiceManager extends BaseServiceManager<StoreScp, StoreScpConfig> {
   /**
    * Create and configure a StoreSCP instance
    */
@@ -69,16 +67,19 @@ export class StoreSCPServiceManager {
     }
 
     if (this.started.has(serviceName)) {
-      console.warn(`StoreSCP service "${serviceName}" is already running`)
+      dicomLogger.warn(serviceName, `Service is already running`)
       return
     }
 
     try {
+      dicomLogger.info(serviceName, 'Starting service...')
       scp.start()
       this.started.add(serviceName)
+      dicomLogger.info(serviceName, 'Service started successfully')
     }
     catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error)
+      dicomLogger.error(serviceName, `Failed to start service: ${errorMsg}`)
       await emitDicomEvent(serviceName, DICOM_EVENTS.storeScp_onError, {
         serviceName,
         error: errorMsg,
@@ -98,16 +99,19 @@ export class StoreSCPServiceManager {
     }
 
     if (!this.started.has(serviceName)) {
-      console.warn(`StoreSCP service "${serviceName}" is not running`)
+      dicomLogger.warn(serviceName, 'Service is not running')
       return
     }
 
     try {
+      dicomLogger.info(serviceName, 'Stopping service...')
       await scp.stop()
       this.started.delete(serviceName)
+      dicomLogger.info(serviceName, 'Service stopped successfully')
     }
     catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error)
+      dicomLogger.error(serviceName, `Failed to stop service: ${errorMsg}`)
       await emitDicomEvent(serviceName, DICOM_EVENTS.storeScp_onError, {
         serviceName,
         error: errorMsg,
@@ -115,31 +119,6 @@ export class StoreSCPServiceManager {
       } as OnErrorPayload)
       throw error
     }
-  }
-
-  /**
-   * Get a service instance
-   */
-  getService(serviceName: string): StoreScp | undefined {
-    return this.instances.get(serviceName)
-  }
-
-  /**
-   * Check if a service is running
-   */
-  isRunning(serviceName: string): boolean {
-    return this.started.has(serviceName)
-  }
-
-  /**
-   * Get all service instances
-   */
-  getAllServices(): Record<string, StoreScp> {
-    const result: Record<string, StoreScp> = {}
-    for (const [name, instance] of this.instances) {
-      result[name] = instance
-    }
-    return result
   }
 
   /**
@@ -158,10 +137,10 @@ export class StoreSCPServiceManager {
         if (handler) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           dicomEventEmitter.on(serviceName, eventId as any, handler)
-          console.log(`[nuxt-dicom] Registered handler "${handlerName}" for ${serviceName}.${eventType}`)
+          dicomLogger.debug(serviceName, `Registered handler "${handlerName}" for event ${eventType}`)
         }
         else {
-          console.warn(`[nuxt-dicom] Handler "${handlerName}" not found for ${serviceName}.${eventType}`)
+          dicomLogger.warn(serviceName, `Handler "${handlerName}" not found for event ${eventType}`)
         }
       }
     }
@@ -173,8 +152,8 @@ export class StoreSCPServiceManager {
     registerConfiguredHandlers(DICOM_EVENTS.storeScp_onStudyCompleted, 'onStudyCompleted')
     registerConfiguredHandlers(DICOM_EVENTS.storeScp_onError, 'onError')
 
-    // OnBeforeStore - synchronous callback for tag modification/validation
-    scp.onBeforeStore((tags) => {
+    // OnBeforeStore - asynchronous callback for tag modification/validation
+    scp.onBeforeStore(async (error: Error | null, tags) => {
       const payload: OnBeforeStorePayload = {
         serviceName,
         tags,
