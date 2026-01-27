@@ -1,5 +1,4 @@
-import { defineEventHandler, getRouterParam, getQuery, createError } from 'h3'
-import { cleanupOldFiles } from '../../../../utils/cleanupFiles'
+import { defineEventHandler, getRouterParam, getQuery, createError, cleanupOldFiles } from '#imports'
 
 export default defineEventHandler(async (event) => {
   const serviceName = getRouterParam(event, 'name')

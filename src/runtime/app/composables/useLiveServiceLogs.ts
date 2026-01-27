@@ -1,3 +1,5 @@
+import { ref, onMounted, onBeforeUnmount, readonly } from '#imports'
+
 /**
  * Log entry from the server
  */

@@ -1,5 +1,6 @@
 import type { Ref } from 'vue'
 import type { TreeItem } from '@nuxt/ui'
+import { ref } from '#imports'
 
 interface FileNode {
   path: string

@@ -1,5 +1,5 @@
 import fsDriver from 'unstorage/drivers/fs'
-import { dicomServiceRegistry } from '#imports'
+import { defineNitroPlugin, dicomServiceRegistry, useStorage } from '#imports'
 
 /**
  * Initialize storage drivers for each registered DICOM service

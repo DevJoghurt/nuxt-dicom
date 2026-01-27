@@ -1,4 +1,4 @@
-import { defineEventHandler, storeSCPServiceManager } from '#imports'
+import { defineEventHandler, storeSCPServiceManager, getRouterParam } from '#imports'
 
 /**
  * POST /api/dicom/services/[name]/start

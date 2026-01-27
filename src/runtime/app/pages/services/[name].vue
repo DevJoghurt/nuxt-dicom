@@ -487,7 +487,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onBeforeUnmount } from 'vue'
+import { 
+  computed, 
+  ref, 
+  useComponentRouter, 
+  useLiveServiceLogs, 
+  useServiceFiles, 
+  useLogLevel, 
+  useConfirmModal,
+  onMounted,
+  watch,
+  useFetch } from '#imports'
 
 interface DicomService {
   name: string

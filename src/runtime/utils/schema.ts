@@ -28,16 +28,16 @@ const StoreSCPConfigSchema = z.object({
   /**
    * Network configuration
    */
-  port: z.number().default(4446).optional(),
-  callingAETitle: z.string().default('STORE-SCP').optional(),
-  maxPduLength: z.number().default(16384).optional(),
+  port: z.number().default(4446),
+  callingAETitle: z.string().default('STORESCP'),
+  maxPduLength: z.number().default(16384),
 
   /**
    * Storage configuration
    */
-  outDir: z.string().default('./dicom-storage').optional(),
-  storageBackend: z.enum(['Filesystem', 'S3']).default('Filesystem').optional(),
-  storeWithFileMeta: z.boolean().default(false).optional(),
+  outDir: z.string().default('./dicom-storage'),
+  storageBackend: z.enum(['Filesystem', 'S3']).default('Filesystem'),
+  storeWithFileMeta: z.boolean().default(false),
 
   /**
    * S3 Configuration (required when storageBackend is 'S3')
@@ -53,38 +53,38 @@ const StoreSCPConfigSchema = z.object({
   /**
    * Tag extraction
    */
-  extractTags: z.array(z.string()).default([]).optional(),
+  extractTags: z.array(z.string()).default([]),
   extractCustomTags: z.array(z.object({
     tag: z.string(),
     name: z.string(),
-  })).default([]).optional(),
+  })).default([]),
 
   /**
    * SOP Classes configuration
    */
-  abstractSyntaxMode: z.enum(['AllStorage', 'All', 'Custom']).default('AllStorage').optional(),
+  abstractSyntaxMode: z.enum(['AllStorage', 'All', 'Custom']).default('AllStorage'),
   abstractSyntaxes: z.array(z.string()).optional(),
 
   /**
    * Transfer Syntax configuration
    */
-  transferSyntaxMode: z.enum(['All', 'UncompressedOnly', 'Custom']).default('All').optional(),
+  transferSyntaxMode: z.enum(['All', 'UncompressedOnly', 'Custom']).default('All'),
   transferSyntaxes: z.array(z.string()).optional(),
 
   /**
    * Study completion timeout in seconds
    */
-  studyTimeout: z.number().default(30).optional(),
+  studyTimeout: z.number().default(30),
 
   /**
    * Enable verbose logging
    */
-  verbose: z.boolean().default(false).optional(),
+  verbose: z.boolean().default(false),
 
   /**
    * Automatically start the service on initialization
    */
-  autoStart: z.boolean().default(true).optional(),
+  autoStart: z.boolean().default(true),
 
   /**
    * Event handlers mapping (service events to handler function names)
@@ -118,7 +118,13 @@ export const DicomConfigSchemas = {
   storeSCP: StoreSCPConfigSchema,
 }
 
+// Validated config type (after parsing with defaults applied)
 export type StoreScpConfig = z.infer<typeof StoreSCPConfigSchema>
+
+// Input config type (what users provide in nuxt.config - all fields optional except eventHandlers)
+export type StoreScpConfigInput = Partial<Omit<StoreScpConfig, 'eventHandlers'>> & {
+  eventHandlers?: StoreScpEventHandlers
+}
 
 /**
  * Helper type for event handlers with autocomplete support
@@ -131,6 +137,6 @@ export type StoreScpEventHandlers = Partial<Record<StoreScpEventType, string[]>>
  */
 export interface ModuleOptions {
   services?: {
-    storeScp?: (Omit<StoreScpConfig, 'eventHandlers'> & { eventHandlers?: StoreScpEventHandlers }) | (Omit<StoreScpConfig, 'eventHandlers'> & { eventHandlers?: StoreScpEventHandlers })[]
+    storeScp?: StoreScpConfigInput | StoreScpConfigInput[]
   }
 }

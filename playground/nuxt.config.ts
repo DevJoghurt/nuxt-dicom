@@ -4,15 +4,13 @@ export default defineNuxtConfig({
     'nuxt-mcp-dev',
     '../src/module',
   ],
+  imports: {
+    autoImport: false,
+  },
   devtools: {
     enabled: true,
   },
   css: ['~/assets/tailwind.css'],
-  nitro: {
-    experimental: {
-      websocket: true,
-    },
-  },
   dicom: {
     route: true,
     // Global log level (can be overridden per-service or at runtime)
@@ -21,6 +19,7 @@ export default defineNuxtConfig({
     // serviceLogs: {
     //   storeScp_1: 'debug',
     // },
+    autoDeleteAfterDays: 10,
     services: {
       storeScp: {
         eventHandlers: {

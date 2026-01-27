@@ -1,6 +1,5 @@
 import type { Peer } from 'crossws'
-import { defineWebSocketHandler } from 'h3'
-import { dicomLogger } from '../../../../../utils/logger'
+import { defineWebSocketHandler, dicomLogger } from '#imports'
 
 // Extend Peer type for storage
 interface PeerWithStorage extends Peer {
@@ -61,10 +60,10 @@ export default defineWebSocketHandler({
     // Store for cleanup in close/error handlers
     peerStorage._serviceName = serviceName
 
-    dicomLogger.debug(serviceName, 'WebSocket client connected')
+    dicomLogger.debug(peerStorage._serviceName, 'WebSocket client connected')
 
     // Send initial logs to new subscriber
-    const recentLogs = dicomLogger.getRecentLogs(serviceName, 100)
+    const recentLogs = dicomLogger.getRecentLogs(peerStorage._serviceName, 100)
     for (const entry of recentLogs) {
       peer.send(
         JSON.stringify({
@@ -82,7 +81,7 @@ export default defineWebSocketHandler({
     peer.send(JSON.stringify({ type: 'ready' }))
 
     // Subscribe to new logs for this service and broadcast to peer
-    const unsubscribe = dicomLogger.subscribe(serviceName, (entry) => {
+    const unsubscribe = dicomLogger.subscribe(peerStorage._serviceName, (entry) => {
       try {
         peer.send(
           JSON.stringify({
@@ -121,7 +120,7 @@ export default defineWebSocketHandler({
         // If service name is different, update subscription
         if (newServiceName !== serviceName) {
           dicomLogger.debug(newServiceName, `WebSocket re-subscribing from ${serviceName} to ${newServiceName}`)
-          
+
           // Unsubscribe from old service if there was one
           const oldUnsubscribe = peerStorage._unsubscribe
           if (oldUnsubscribe) {

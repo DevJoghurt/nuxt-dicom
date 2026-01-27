@@ -1,3 +1,4 @@
+import { defineNitroPlugin, useRuntimeConfig } from '#imports'
 import { dicomLogger } from '../../utils/logger'
 
 export default defineNitroPlugin(() => {

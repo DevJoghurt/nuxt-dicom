@@ -1,4 +1,4 @@
-import { dicomLogger } from '../../../../utils/logger'
+import { defineEventHandler, dicomLogger } from '#imports'
 
 export default defineEventHandler(async () => {
   // Get all services that have custom log levels

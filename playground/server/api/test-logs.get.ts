@@ -1,4 +1,4 @@
-import { dicomLogger } from '#imports'
+import { dicomLogger, defineEventHandler } from '#imports'
 
 export default defineEventHandler(() => {
   const storeScp1Logs = dicomLogger.getRecentLogs('storeScp_1', 50)

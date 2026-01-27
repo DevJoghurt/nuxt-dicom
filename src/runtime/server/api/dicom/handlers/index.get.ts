@@ -1,4 +1,4 @@
-import { defineEventHandler } from '#imports'
+import { defineEventHandler, useRuntimeConfig } from '#imports'
 
 /**
  * GET /api/dicom/handlers

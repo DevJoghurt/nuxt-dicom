@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { useComponentRouter, ref, computed, onMounted } from '#imports'
+import { useComponentRouter, ref, computed, onMounted, useFetch } from '#imports'
 import ServiceItem from '../../components/ServiceItem.vue'
 import EventHandlerItem from '../../components/EventHandlerItem.vue'
 

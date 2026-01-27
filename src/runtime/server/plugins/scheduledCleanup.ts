@@ -3,7 +3,8 @@ import { cleanupAllServices } from '../utils/cleanupFiles'
 
 export default defineNitroPlugin((nitroApp) => {
   const config = useRuntimeConfig()
-  const autoDeleteAfterDays = config.public.dicom?.autoDeleteAfterDays || 0
+  const dicomConfig = config.dicom
+  const autoDeleteAfterDays = dicomConfig?.autoDeleteAfterDays || 0
 
   if (autoDeleteAfterDays > 0) {
     console.log(`[cleanup] Scheduled cleanup enabled: files older than ${autoDeleteAfterDays} days will be deleted daily`)

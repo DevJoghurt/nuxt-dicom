@@ -1,3 +1,5 @@
+import { ref, readonly } from '#imports'
+
 export function useLogLevel() {
   const currentLevel = ref<'debug' | 'info' | 'warn' | 'error'>('info')
   const serviceLevels = ref<Record<string, 'debug' | 'info' | 'warn' | 'error'>>({})

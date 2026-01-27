@@ -1,3 +1,5 @@
+import { defineEventHandler, getRouterParam, createError, getQuery, useStorage, setResponseHeaders } from '#imports'
+
 /**
  * GET /api/dicom/services/:name/files/download?path=...
  * Download a specific file from DICOM service storage
@@ -35,7 +37,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Get metadata
-    const meta = await storage.getMeta(path)
+    // const meta = await storage.getMeta(path)
 
     // Set appropriate headers
     setResponseHeaders(event, {

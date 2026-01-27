@@ -1,4 +1,4 @@
-import { defineEventHandler, storeSCPServiceManager, dicomServiceRegistry } from '#imports'
+import { defineEventHandler, storeSCPServiceManager, dicomServiceRegistry, createError } from '#imports'
 
 /**
  * GET /api/dicom/services

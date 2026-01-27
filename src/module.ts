@@ -2,7 +2,7 @@ import { defineNuxtModule, createResolver, addServerScanDir, addComponent, addCo
 import { join } from 'node:path'
 import { readFileSync } from 'node:fs'
 import defu from 'defu'
-import type { StoreScpConfig } from './runtime/utils/schema'
+import type { StoreScpConfig, StoreScpConfigInput } from './runtime/utils/schema'
 import { DicomConfigSchemas } from './runtime/utils/schema'
 import { scanDicomEventHandlers, generateHandlersTemplate } from './utils/scanDicomHandlers'
 import { watchDicomHandlers } from './utils/dev'
@@ -47,7 +47,7 @@ export interface ModuleOptions {
    */
   autoDeleteAfterDays?: number
   services?: {
-    storeScp?: StoreScpConfig | StoreScpConfig[]
+    storeScp?: StoreScpConfigInput | StoreScpConfigInput[]
   }
 }
 
