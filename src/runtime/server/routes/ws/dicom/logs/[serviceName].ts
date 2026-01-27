@@ -31,19 +31,20 @@ function extractServiceName(path: string | undefined): string {
  * Route: ws://localhost:3000/ws/dicom/logs/:serviceName
  */
 export default defineWebSocketHandler({
-  async open(peer: Peer, event: any) {
+  async open(peer: Peer, event?: { node?: { req?: { url?: string, originalUrl?: string } }, url?: string }) {
     const peerStorage = peer as PeerWithStorage
 
     // Initial serviceName from URL (fallback to unknown if not accessible)
     let serviceName = 'unknown'
     try {
       let url: string | undefined
+      const peerWithUrl = peer as Record<string, unknown>
 
-      if ('url' in peer && typeof (peer as any).url === 'string') {
-        url = (peer as any).url
+      if ('url' in peer && typeof peerWithUrl.url === 'string') {
+        url = peerWithUrl.url
       }
-      else if ('url' in peer && typeof (peer as any).url === 'object' && (peer as any).url?.pathname) {
-        url = (peer as any).url.pathname
+      else if ('url' in peer && typeof peerWithUrl.url === 'object' && peerWithUrl.url && 'pathname' in peerWithUrl.url) {
+        url = (peerWithUrl.url as { pathname?: string }).pathname
       }
       else if (event) {
         url = event.node?.req?.url || event.node?.req?.originalUrl || event.url
@@ -105,7 +106,7 @@ export default defineWebSocketHandler({
     peerStorage._unsubscribe = unsubscribe
   },
 
-  message(peer: Peer, message: any, event?: any) {
+  message(peer: Peer, message: { text: () => string }) {
     const peerStorage = peer as PeerWithStorage
     let serviceName = peerStorage._serviceName || 'unknown'
     const text = message.text()
@@ -181,7 +182,7 @@ export default defineWebSocketHandler({
     }
   },
 
-  close(peer: Peer, event?: any) {
+  close(peer: Peer) {
     const peerStorage = peer as PeerWithStorage
     const serviceName = peerStorage._serviceName || 'unknown'
     dicomLogger.debug(serviceName, 'WebSocket client disconnected')
@@ -193,7 +194,7 @@ export default defineWebSocketHandler({
     }
   },
 
-  error(peer: Peer, error: any, event?: any) {
+  error(peer: Peer, error: Error) {
     const peerStorage = peer as PeerWithStorage
     const serviceName = peerStorage._serviceName || 'unknown'
     dicomLogger.error(serviceName, `WebSocket error: ${error.message}`)

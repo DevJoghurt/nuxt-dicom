@@ -4,7 +4,7 @@ import { defineEventHandler, storeSCPServiceManager, dicomServiceRegistry, creat
  * GET /api/dicom/services
  * Get all DICOM services with their status and metadata
  */
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async () => {
   try {
     const registeredServices = dicomServiceRegistry.getAllServices()
 

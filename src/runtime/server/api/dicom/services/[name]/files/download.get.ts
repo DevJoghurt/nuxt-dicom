@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
     return content
   }
   catch (error) {
-    if ((error as any).statusCode) {
+    if (error && typeof error === 'object' && 'statusCode' in error) {
       throw error
     }
 

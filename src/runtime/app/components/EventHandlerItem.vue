@@ -25,7 +25,10 @@
           <div class="flex items-start justify-between gap-4 mb-3">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-3 mb-1">
-                <div class="flex items-center justify-center w-8 h-8 rounded bg-gradient-to-br" :class="eventTypeColors[handler.eventType as keyof typeof eventTypeColors]?.bgClass || 'from-gray-400 to-gray-500'">
+                <div
+                  class="flex items-center justify-center w-8 h-8 rounded bg-gradient-to-br"
+                  :class="eventTypeColors[handler.eventType as keyof typeof eventTypeColors]?.bgClass || 'from-gray-400 to-gray-500'"
+                >
                   <UIcon
                     :name="eventTypeIcons[handler.eventType as keyof typeof eventTypeIcons] || 'i-lucide-zap'"
                     class="w-4 h-4 text-white"
@@ -139,7 +142,7 @@ const eventTypeIcons: Record<string, string> = {
 }
 
 // Color and label mapping for event types
-const eventTypeColors: Record<string, { color: string; bgClass: string }> = {
+const eventTypeColors: Record<string, { color: string, bgClass: string }> = {
   onBeforeStore: { color: 'amber', bgClass: 'from-amber-400 to-amber-600' },
   onFileStored: { color: 'green', bgClass: 'from-green-400 to-green-600' },
   onStudyCompleted: { color: 'blue', bgClass: 'from-blue-400 to-blue-600' },
@@ -159,9 +162,9 @@ const eventTypeLabels: Record<string, string> = {
 const enhancedHandlers = computed((): EnhancedHandler[] => {
   if (!props.handlers) return []
 
-  return props.handlers.map(handler => {
+  return props.handlers.map((handler) => {
     // Find which services use this handler
-    const servicesUsing = (props.services || []).filter(service => {
+    const servicesUsing = (props.services || []).filter((service) => {
       const handlerNames = Object.values(service.eventHandlers || {}).flat()
       return handlerNames.includes(handler.name)
     })

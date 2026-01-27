@@ -65,10 +65,10 @@ export function useServiceFiles(serviceName: string): FileBrowserState & {
       }
 
       // Store path as custom property for download
-      ;(treeItem as any).path = node.path
-      ;(treeItem as any).size = node.size
-      ;(treeItem as any).mtime = node.mtime
-      ;(treeItem as any).isDirectory = node.isDirectory
+      ;(treeItem as Record<string, unknown>).path = node.path
+      ;(treeItem as Record<string, unknown>).size = node.size
+      ;(treeItem as Record<string, unknown>).mtime = node.mtime
+      ;(treeItem as Record<string, unknown>).isDirectory = node.isDirectory
 
       // Add onSelect handler for files only
       if (!node.isDirectory) {

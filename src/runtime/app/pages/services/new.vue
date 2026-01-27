@@ -51,7 +51,10 @@
               </p>
             </div>
             <div class="p-6 space-y-4">
-              <UFormField label="Service Name" name="name">
+              <UFormField
+                label="Service Name"
+                name="name"
+              >
                 <UInput
                   v-model="formState.name"
                   placeholder="e.g., Main DICOM Server"
@@ -59,7 +62,10 @@
                 />
               </UFormField>
 
-              <UFormField label="Application Entity Title (AET)" name="applicationEntityTitle">
+              <UFormField
+                label="Application Entity Title (AET)"
+                name="applicationEntityTitle"
+              >
                 <UInput
                   v-model="formState.applicationEntityTitle"
                   placeholder="e.g., STORESCP"
@@ -67,7 +73,10 @@
                 />
               </UFormField>
 
-              <UFormField label="Description (Optional)" name="description">
+              <UFormField
+                label="Description (Optional)"
+                name="description"
+              >
                 <UTextarea
                   v-model="formState.description"
                   placeholder="Describe the purpose of this service"
@@ -88,7 +97,10 @@
               </p>
             </div>
             <div class="p-6 space-y-4">
-              <UFormField label="Port" name="port">
+              <UFormField
+                label="Port"
+                name="port"
+              >
                 <UInput
                   v-model.number="formState.port"
                   type="number"
@@ -99,14 +111,20 @@
                 />
               </UFormField>
 
-              <UFormField label="Storage Path (Optional)" name="storagePath">
+              <UFormField
+                label="Storage Path (Optional)"
+                name="storagePath"
+              >
                 <UInput
                   v-model="formState.storagePath"
                   placeholder="e.g., ./dicom-files"
                 />
               </UFormField>
 
-              <UFormField label="Bind Address (Optional)" name="bindAddress">
+              <UFormField
+                label="Bind Address (Optional)"
+                name="bindAddress"
+              >
                 <UInput
                   v-model="formState.bindAddress"
                   placeholder="Leave empty for 0.0.0.0"
@@ -299,7 +317,7 @@ async function handleSubmit() {
     const validated = schema.parse(formState.value)
 
     // Create service
-    const response = await $fetch('/api/dicom/services', {
+    await $fetch('/api/dicom/services', {
       method: 'POST',
       body: validated,
     })

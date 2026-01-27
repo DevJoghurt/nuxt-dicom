@@ -14,7 +14,7 @@ export const config = defineDicomEventConfig({
 export default defineDicomEvent('storeScp_onStudyCompleted', async (payload, { logger }) => {
   // Calculate metadata for logging
   const seriesCount = payload.series.length
-  const instanceCount = payload.series.reduce((sum: number, s: any) => sum + s.instances.length, 0)
+  const instanceCount = payload.series.reduce((sum: number, s: { instances: unknown[] }) => sum + s.instances.length, 0)
 
   logger.info(
     'storeScp_1',

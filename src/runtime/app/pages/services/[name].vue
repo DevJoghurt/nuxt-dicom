@@ -41,39 +41,59 @@
     <div class="flex-1 min-h-0 overflow-y-auto">
       <div class="max-w-7xl mx-auto p-6">
         <!-- Loading State -->
-        <div v-if="loading" class="flex items-center justify-center py-12">
+        <div
+          v-if="loading"
+          class="flex items-center justify-center py-12"
+        >
           <div class="text-center">
             <UIcon
               name="i-lucide-loader-2"
               class="w-12 h-12 animate-spin mx-auto mb-3 opacity-50"
             />
-            <p class="text-gray-500 dark:text-gray-400">Loading service details...</p>
+            <p class="text-gray-500 dark:text-gray-400">
+              Loading service details...
+            </p>
           </div>
         </div>
 
         <!-- Service Not Found -->
-        <div v-else-if="!service" class="flex items-center justify-center py-12">
+        <div
+          v-else-if="!service"
+          class="flex items-center justify-center py-12"
+        >
           <div class="text-center">
-            <UIcon name="i-lucide-alert-circle" class="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p class="text-gray-500 dark:text-gray-400">Service not found</p>
+            <UIcon
+              name="i-lucide-alert-circle"
+              class="w-12 h-12 mx-auto mb-3 opacity-50"
+            />
+            <p class="text-gray-500 dark:text-gray-400">
+              Service not found
+            </p>
           </div>
         </div>
 
         <!-- Service Content -->
-        <div v-else class="space-y-6">
+        <div
+          v-else
+          class="space-y-6"
+        >
           <!-- Service Stats -->
           <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
               <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">
                 Port
               </p>
-              <p class="text-2xl font-bold mt-2">{{ service.port }}</p>
+              <p class="text-2xl font-bold mt-2">
+                {{ service.port }}
+              </p>
             </div>
             <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
               <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">
                 AE Title
               </p>
-              <p class="text-lg font-semibold mt-2 truncate">{{ service.callingAETitle }}</p>
+              <p class="text-lg font-semibold mt-2 truncate">
+                {{ service.callingAETitle }}
+              </p>
             </div>
             <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
               <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">
@@ -107,7 +127,10 @@
               <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">
                 Storage
               </p>
-              <p class="text-sm font-semibold mt-2 truncate" :title="service.outDir">
+              <p
+                class="text-sm font-semibold mt-2 truncate"
+                :title="service.outDir"
+              >
                 {{ service.outDir.split('/').pop() || service.outDir }}
               </p>
             </div>
@@ -120,23 +143,23 @@
               icon="i-lucide-play"
               label="Start"
               color="success"
-              @click="startService"
               :loading="actionLoading"
+              @click="startService"
             />
             <UButton
               v-else
               icon="i-lucide-square"
               label="Stop"
               color="error"
-              @click="stopService"
               :loading="actionLoading"
+              @click="stopService"
             />
             <UButton
               icon="i-lucide-rotate-cw"
               label="Restart"
               color="warning"
-              @click="restartService"
               :loading="actionLoading"
+              @click="restartService"
             />
             <UButton
               icon="i-lucide-refresh-cw"
@@ -160,12 +183,20 @@
           </div>
 
           <!-- Configuration Tab -->
-          <div v-if="activeTab === 'configuration'" class="space-y-4">
+          <div
+            v-if="activeTab === 'configuration'"
+            class="space-y-4"
+          >
             <!-- Full Path Section -->
             <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
               <div class="flex items-center gap-2 mb-4">
-                <UIcon name="i-lucide-folder" class="w-5 h-5" />
-                <h3 class="font-semibold">Storage Directory</h3>
+                <UIcon
+                  name="i-lucide-folder"
+                  class="w-5 h-5"
+                />
+                <h3 class="font-semibold">
+                  Storage Directory
+                </h3>
               </div>
               <div class="bg-gray-50 dark:bg-gray-800 rounded p-3 font-mono text-sm break-all">
                 {{ service.outDir }}
@@ -175,33 +206,46 @@
             <!-- Configuration Details -->
             <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
               <div class="flex items-center gap-2 mb-4">
-                <UIcon name="i-lucide-settings" class="w-5 h-5" />
-                <h3 class="font-semibold">Configuration</h3>
+                <UIcon
+                  name="i-lucide-settings"
+                  class="w-5 h-5"
+                />
+                <h3 class="font-semibold">
+                  Configuration
+                </h3>
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="border-b border-gray-200 dark:border-gray-800 pb-4 last:border-b-0">
                   <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider mb-1">
                     Service Name
                   </p>
-                  <p class="font-mono">{{ service.name }}</p>
+                  <p class="font-mono">
+                    {{ service.name }}
+                  </p>
                 </div>
                 <div class="border-b border-gray-200 dark:border-gray-800 pb-4 last:border-b-0">
                   <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider mb-1">
                     Calling AE Title
                   </p>
-                  <p class="font-mono">{{ service.callingAETitle }}</p>
+                  <p class="font-mono">
+                    {{ service.callingAETitle }}
+                  </p>
                 </div>
                 <div class="border-b border-gray-200 dark:border-gray-800 pb-4 last:border-b-0">
                   <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider mb-1">
                     Port
                   </p>
-                  <p class="font-mono">{{ service.port }}</p>
+                  <p class="font-mono">
+                    {{ service.port }}
+                  </p>
                 </div>
                 <div class="border-b border-gray-200 dark:border-gray-800 pb-4 last:border-b-0">
                   <p class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider mb-1">
                     Auto Start
                   </p>
-                  <p class="font-mono">{{ service.autoStart ? 'Yes' : 'No' }}</p>
+                  <p class="font-mono">
+                    {{ service.autoStart ? 'Yes' : 'No' }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -209,15 +253,26 @@
             <!-- Timestamps -->
             <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
               <div class="flex items-center gap-2 mb-4">
-                <UIcon name="i-lucide-clock" class="w-5 h-5" />
-                <h3 class="font-semibold">Timestamps</h3>
+                <UIcon
+                  name="i-lucide-clock"
+                  class="w-5 h-5"
+                />
+                <h3 class="font-semibold">
+                  Timestamps
+                </h3>
               </div>
               <div class="space-y-3">
-                <div v-if="service.createdAt" class="flex justify-between items-start">
+                <div
+                  v-if="service.createdAt"
+                  class="flex justify-between items-start"
+                >
                   <span class="text-sm text-gray-600 dark:text-gray-400">Created:</span>
                   <span class="text-sm font-mono">{{ formatDate(service.createdAt) }}</span>
                 </div>
-                <div v-if="service.startedAt && service.isRunning" class="flex justify-between items-start">
+                <div
+                  v-if="service.startedAt && service.isRunning"
+                  class="flex justify-between items-start"
+                >
                   <span class="text-sm text-gray-600 dark:text-gray-400">Started:</span>
                   <span class="text-sm font-mono">{{ formatDate(service.startedAt) }}</span>
                 </div>
@@ -230,8 +285,13 @@
               class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6"
             >
               <div class="flex items-center gap-2 mb-4">
-                <UIcon name="i-lucide-zap" class="w-5 h-5" />
-                <h3 class="font-semibold">Event Handlers</h3>
+                <UIcon
+                  name="i-lucide-zap"
+                  class="w-5 h-5"
+                />
+                <h3 class="font-semibold">
+                  Event Handlers
+                </h3>
               </div>
               <div class="space-y-4">
                 <div
@@ -239,7 +299,9 @@
                   :key="eventType"
                   class="border-b border-gray-200 dark:border-gray-800 pb-3 last:border-b-0"
                 >
-                  <p class="text-sm font-medium mb-2">{{ eventType }}</p>
+                  <p class="text-sm font-medium mb-2">
+                    {{ eventType }}
+                  </p>
                   <div class="flex flex-wrap gap-2">
                     <UBadge
                       v-for="handler in handlers"
@@ -257,12 +319,20 @@
           </div>
 
           <!-- Files Tab -->
-          <div v-if="activeTab === 'files'" class="space-y-4">
+          <div
+            v-if="activeTab === 'files'"
+            class="space-y-4"
+          >
             <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
               <div class="flex items-center justify-between gap-2 mb-4">
                 <div class="flex items-center gap-2">
-                  <UIcon name="i-lucide-folder-tree" class="w-5 h-5" />
-                  <h3 class="font-semibold">Stored Files</h3>
+                  <UIcon
+                    name="i-lucide-folder-tree"
+                    class="w-5 h-5"
+                  />
+                  <h3 class="font-semibold">
+                    Stored Files
+                  </h3>
                   <UBadge
                     v-if="!fileManager.isLoading.value && fileManager.tree.value.length > 0"
                     color="info"
@@ -293,20 +363,28 @@
               </div>
 
               <!-- Error Message -->
-              <div v-if="fileManager.error.value" class="mb-4">
+              <div
+                v-if="fileManager.error.value"
+                class="mb-4"
+              >
                 <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3 text-sm text-red-700 dark:text-red-400">
                   {{ fileManager.error.value }}
                 </div>
               </div>
 
               <!-- Loading State -->
-              <div v-if="fileManager.isLoading.value" class="flex items-center justify-center py-12">
+              <div
+                v-if="fileManager.isLoading.value"
+                class="flex items-center justify-center py-12"
+              >
                 <div class="text-center">
                   <UIcon
                     name="i-lucide-loader-2"
                     class="w-8 h-8 animate-spin mx-auto mb-2 opacity-50"
                   />
-                  <p class="text-sm text-gray-500 dark:text-gray-400">Loading files...</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Loading files...
+                  </p>
                 </div>
               </div>
 
@@ -316,8 +394,13 @@
                 class="flex items-center justify-center py-12"
               >
                 <div class="text-center">
-                  <UIcon name="i-lucide-folder-open" class="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p class="text-gray-500 dark:text-gray-400">No files stored yet</p>
+                  <UIcon
+                    name="i-lucide-folder-open"
+                    class="w-12 h-12 mx-auto mb-3 opacity-50"
+                  />
+                  <p class="text-gray-500 dark:text-gray-400">
+                    No files stored yet
+                  </p>
                   <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">
                     Files will appear here after receiving DICOM data
                   </p>
@@ -325,7 +408,10 @@
               </div>
 
               <!-- File Tree -->
-              <div v-else class="border border-gray-200 dark:border-gray-800 rounded-lg p-4 max-h-[600px] overflow-y-auto">
+              <div
+                v-else
+                class="border border-gray-200 dark:border-gray-800 rounded-lg p-4 max-h-[600px] overflow-y-auto"
+              >
                 <UTree
                   :items="fileManager.tree.value"
                   color="neutral"
@@ -335,7 +421,10 @@
                 >
                   <template #item-trailing="{ item }">
                     <div class="flex items-center gap-3">
-                      <div v-if="!item.isDirectory" class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                      <div
+                        v-if="!item.isDirectory"
+                        class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
+                      >
                         <span v-if="item.mtime">
                           {{ fileManager.formatDate(item.mtime) }}
                         </span>
@@ -343,7 +432,11 @@
                           {{ fileManager.formatFileSize(item.size) }}
                         </span>
                       </div>
-                      <div v-if="!item.isDirectory" class="flex gap-1" @click.stop>
+                      <div
+                        v-if="!item.isDirectory"
+                        class="flex gap-1"
+                        @click.stop
+                      >
                         <UButton
                           icon="i-lucide-download"
                           color="neutral"
@@ -367,12 +460,20 @@
           </div>
 
           <!-- Logs Tab -->
-          <div v-if="activeTab === 'logs'" class="space-y-4">
+          <div
+            v-if="activeTab === 'logs'"
+            class="space-y-4"
+          >
             <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
               <div class="flex items-center justify-between gap-2 mb-4">
                 <div class="flex items-center gap-2">
-                  <UIcon name="i-lucide-terminal" class="w-5 h-5" />
-                  <h3 class="font-semibold">Service Logs</h3>
+                  <UIcon
+                    name="i-lucide-terminal"
+                    class="w-5 h-5"
+                  />
+                  <h3 class="font-semibold">
+                    Service Logs
+                  </h3>
                   <UBadge
                     :color="liveLogs.isConnected.value ? 'success' : 'neutral'"
                     variant="subtle"
@@ -394,7 +495,10 @@
                     @update:model-value="updateLogLevel"
                   >
                     <template #item-leading="{ item }">
-                      <UIcon :name="item.icon" class="w-4 h-4" />
+                      <UIcon
+                        :name="item.icon"
+                        class="w-4 h-4"
+                      />
                     </template>
                   </USelectMenu>
                   <UButton
@@ -415,7 +519,10 @@
               </div>
 
               <!-- Error Message -->
-              <div v-if="liveLogs.error.value" class="mb-4">
+              <div
+                v-if="liveLogs.error.value"
+                class="mb-4"
+              >
                 <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3 text-sm text-red-700 dark:text-red-400">
                   {{ liveLogs.error.value }}
                 </div>
@@ -487,13 +594,13 @@
 </template>
 
 <script setup lang="ts">
-import { 
-  computed, 
-  ref, 
-  useComponentRouter, 
-  useLiveServiceLogs, 
-  useServiceFiles, 
-  useLogLevel, 
+import {
+  computed,
+  ref,
+  useComponentRouter,
+  useLiveServiceLogs,
+  useServiceFiles,
+  useLogLevel,
   useConfirmModal,
   onMounted,
   watch,
@@ -541,7 +648,7 @@ const logLevelManager = useLogLevel()
 const confirm = useConfirmModal()
 
 // Count total files in tree
-function countFiles(items: any[]): number {
+function countFiles(items: Array<{ isDirectory?: boolean, children?: unknown[] }>): number {
   let count = 0
   for (const item of items) {
     if (!item.isDirectory) {
@@ -569,7 +676,7 @@ onMounted(async () => {
   await logLevelManager.fetchLogLevels()
   const effectiveLevel = logLevelManager.getEffectiveLevel(serviceName.value)
   selectedLogLevel.value = logLevelOptions.find(opt => opt.value === effectiveLevel) || logLevelOptions[1]
-  
+
   // Fetch files when Files tab is active or when switching to it
   if (activeTab.value === 'files') {
     await fileManager.fetchFiles()
@@ -586,10 +693,10 @@ watch(activeTab, async (newTab) => {
 // Update log level
 async function updateLogLevel(option: typeof logLevelOptions[0]) {
   try {
-    await logLevelManager.setServiceLevel(serviceName.value, option.value as any)
+    await logLevelManager.setServiceLevel(serviceName.value, option.value as 'debug' | 'info' | 'warn' | 'error')
   }
-  catch (err) {
-    console.error('Failed to update log level:', err)
+  catch {
+    // Error is already logged and set in the composable
   }
 }
 
@@ -700,12 +807,12 @@ async function confirmDelete(path: string, name: string) {
     confirmLabel: 'Delete',
     cancelLabel: 'Cancel',
   })
-  
+
   if (result.confirmed) {
     try {
       await fileManager.deleteFile(path)
     }
-    catch (err) {
+    catch {
       // Error is already logged and set in the composable
     }
   }
@@ -716,7 +823,7 @@ async function performCleanup() {
     await fileManager.cleanupOldFiles(cleanupDays.value)
     showCleanupDialog.value = false
   }
-  catch (err) {
+  catch {
     // Error is already logged and set in the composable
   }
 }

@@ -4,7 +4,7 @@ export default defineEventHandler(() => {
   const storeScp1Logs = dicomLogger.getRecentLogs('storeScp_1', 50)
 
   // Check subscriber count
-  const subscriberInfo = (dicomLogger as any).listeners
+  const subscriberInfo = (dicomLogger as Record<string, unknown>).listeners as Map<string, Set<unknown>> | undefined
   const storeScp1Subscribers = subscriberInfo?.get?.('storeScp_1')?.size || 0
 
   return {

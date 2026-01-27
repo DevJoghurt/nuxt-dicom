@@ -187,22 +187,22 @@ function handleNewService() {
 // Computed stats with live updates
 const stats = computed(() => {
   const servicesList = services.value || []
-  
+
   // Count running services using isRunning flag
-  const runningCount = servicesList.filter((s: any) => s.isRunning === true).length
-  
+  const runningCount = servicesList.filter((s: { isRunning?: boolean }) => s.isRunning === true).length
+
   // Calculate total event handlers used across all services
   const usedHandlers = new Set<string>()
-  servicesList.forEach((s: any) => {
+  servicesList.forEach((s: { eventHandlers?: Record<string, unknown> }) => {
     if (s.eventHandlers) {
-      Object.values(s.eventHandlers).forEach((handlers: any) => {
+      Object.values(s.eventHandlers).forEach((handlers: unknown) => {
         if (Array.isArray(handlers)) {
           handlers.forEach((h: string) => usedHandlers.add(h))
         }
       })
     }
   })
-  
+
   return {
     total: servicesList.length,
     running: runningCount,

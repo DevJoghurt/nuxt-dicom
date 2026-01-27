@@ -1,7 +1,7 @@
 import { defineNitroPlugin, useRuntimeConfig } from '#imports'
 import { cleanupAllServices } from '../utils/cleanupFiles'
 
-export default defineNitroPlugin((nitroApp) => {
+export default defineNitroPlugin(() => {
   const config = useRuntimeConfig()
   const dicomConfig = config.dicom
   const autoDeleteAfterDays = dicomConfig?.autoDeleteAfterDays || 0
