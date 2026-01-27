@@ -63,22 +63,20 @@ export default defineWebSocketHandler({
 
     dicomLogger.debug(peerStorage._serviceName, 'WebSocket client connected')
 
-    // Send initial logs to new subscriber
+    // Send initial logs to new subscriber (in chronological order, client will reverse)
     const recentLogs = dicomLogger.getRecentLogs(peerStorage._serviceName, 100)
-    for (const entry of recentLogs) {
-      peer.send(
-        JSON.stringify({
-          type: 'log',
-          entry: {
-            timestamp: entry.timestamp.toISOString(),
-            serviceName: entry.serviceName,
-            level: entry.level,
-            message: entry.message,
-            metadata: entry.metadata,
-          },
-        }),
-      )
-    }
+    peer.send(
+      JSON.stringify({
+        type: 'initial',
+        entries: recentLogs.map(entry => ({
+          timestamp: entry.timestamp.toISOString(),
+          serviceName: entry.serviceName,
+          level: entry.level,
+          message: entry.message,
+          metadata: entry.metadata,
+        })),
+      }),
+    )
     peer.send(JSON.stringify({ type: 'ready' }))
 
     // Subscribe to new logs for this service and broadcast to peer

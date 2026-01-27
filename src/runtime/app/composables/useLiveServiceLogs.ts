@@ -72,7 +72,11 @@ export function useLiveServiceLogs(serviceName: string) {
         try {
           const data = JSON.parse(event.data)
 
-          if (data.type === 'log' && data.entry) {
+          if (data.type === 'initial' && Array.isArray(data.entries)) {
+            // Initial batch of logs - reverse to show newest first
+            logs.value = [...data.entries].reverse()
+          }
+          else if (data.type === 'log' && data.entry) {
             // Add new logs at the beginning (latest first)
             logs.value.unshift(data.entry)
 

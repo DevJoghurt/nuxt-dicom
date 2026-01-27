@@ -195,8 +195,8 @@ class DicomLogger {
    */
   getRecentLogs(serviceName: string, count: number = 100): LogEntry[] {
     const logs = this.logs.get(serviceName) || []
-    // Return latest logs first (reverse chronological order)
-    return logs.slice(Math.max(0, logs.length - count)).reverse()
+    // Return in chronological order (oldest first)
+    return logs.slice(Math.max(0, logs.length - count))
   }
 
   /**
