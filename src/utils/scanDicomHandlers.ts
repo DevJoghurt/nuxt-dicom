@@ -179,7 +179,7 @@ export function generateHandlerRegistrations(
     .map((handler, idx) => {
       const varName = `handler_${idx}`
       // Register handler by name so it can be looked up dynamically
-      return `  dicomEventEmitter.registerNamedHandler('${handler.name}', ${varName}.handler)`
+      return `  dicomEventEmitter.registerNamedHandler('${handler.name}', ${varName}.handler, ${varName}.config)`
     })
     .join('\n')
 

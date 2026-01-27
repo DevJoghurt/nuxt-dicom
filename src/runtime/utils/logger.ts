@@ -15,6 +15,11 @@ export interface LogEntry {
 export type LogListener = (entry: LogEntry) => void
 
 /**
+ * Log level type
+ */
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
+
+/**
  * Centralized logging service
  * Manages logs for all services and notifies listeners of new entries
  */
@@ -24,6 +29,46 @@ class DicomLogger {
   private globalListeners: Set<LogListener> = new Set()
   private maxLogsPerService = 1000
   private maxGlobalLogs = 5000
+  private minLogLevel: Map<string, LogLevel> = new Map() // service -> minimum log level
+  private globalMinLogLevel: LogLevel = 'debug' // Global minimum log level
+
+  private logLevelPriority: Record<LogLevel, number> = {
+    debug: 0,
+    info: 1,
+    warn: 2,
+    error: 3,
+  }
+
+  /**
+   * Set minimum log level for a specific service
+   * Logs below this level will be ignored
+   */
+  setLogLevel(serviceName: string, level: LogLevel): void {
+    this.minLogLevel.set(serviceName, level)
+  }
+
+  /**
+   * Set global minimum log level
+   * Applies to all services unless overridden per service
+   */
+  setGlobalLogLevel(level: LogLevel): void {
+    this.globalMinLogLevel = level
+  }
+
+  /**
+   * Get effective log level for a service
+   */
+  getLogLevel(serviceName: string): LogLevel {
+    return this.minLogLevel.get(serviceName) || this.globalMinLogLevel
+  }
+
+  /**
+   * Check if a log should be recorded based on level
+   */
+  private shouldLog(serviceName: string, level: LogLevel): boolean {
+    const minLevel = this.getLogLevel(serviceName)
+    return this.logLevelPriority[level] >= this.logLevelPriority[minLevel]
+  }
 
   /**
    * Subscribe to logs for a specific service
@@ -61,6 +106,11 @@ class DicomLogger {
     message: string,
     metadata?: Record<string, unknown>,
   ): void {
+    // Check if this log should be recorded based on level
+    if (!this.shouldLog(serviceName, level)) {
+      return
+    }
+
     const entry: LogEntry = {
       timestamp: new Date(),
       serviceName,
@@ -145,7 +195,8 @@ class DicomLogger {
    */
   getRecentLogs(serviceName: string, count: number = 100): LogEntry[] {
     const logs = this.logs.get(serviceName) || []
-    return logs.slice(Math.max(0, logs.length - count))
+    // Return latest logs first (reverse chronological order)
+    return logs.slice(Math.max(0, logs.length - count)).reverse()
   }
 
   /**

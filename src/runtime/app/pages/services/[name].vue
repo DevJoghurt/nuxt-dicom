@@ -256,6 +256,116 @@
             </div>
           </div>
 
+          <!-- Files Tab -->
+          <div v-if="activeTab === 'files'" class="space-y-4">
+            <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
+              <div class="flex items-center justify-between gap-2 mb-4">
+                <div class="flex items-center gap-2">
+                  <UIcon name="i-lucide-folder-tree" class="w-5 h-5" />
+                  <h3 class="font-semibold">Stored Files</h3>
+                  <UBadge
+                    v-if="!fileManager.isLoading.value && fileManager.tree.value.length > 0"
+                    color="info"
+                    variant="subtle"
+                    size="sm"
+                  >
+                    {{ countFiles(fileManager.tree.value) }} files
+                  </UBadge>
+                </div>
+                <div class="flex items-center gap-2">
+                  <UButton
+                    icon="i-lucide-trash-2"
+                    label="Cleanup Old Files"
+                    color="warning"
+                    variant="ghost"
+                    size="sm"
+                    @click="showCleanupDialog = true"
+                  />
+                  <UButton
+                    icon="i-lucide-refresh-cw"
+                    color="neutral"
+                    variant="ghost"
+                    size="sm"
+                    :loading="fileManager.isLoading.value"
+                    @click="fileManager.fetchFiles()"
+                  />
+                </div>
+              </div>
+
+              <!-- Error Message -->
+              <div v-if="fileManager.error.value" class="mb-4">
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3 text-sm text-red-700 dark:text-red-400">
+                  {{ fileManager.error.value }}
+                </div>
+              </div>
+
+              <!-- Loading State -->
+              <div v-if="fileManager.isLoading.value" class="flex items-center justify-center py-12">
+                <div class="text-center">
+                  <UIcon
+                    name="i-lucide-loader-2"
+                    class="w-8 h-8 animate-spin mx-auto mb-2 opacity-50"
+                  />
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Loading files...</p>
+                </div>
+              </div>
+
+              <!-- Empty State -->
+              <div
+                v-else-if="!fileManager.error.value && fileManager.tree.value.length === 0"
+                class="flex items-center justify-center py-12"
+              >
+                <div class="text-center">
+                  <UIcon name="i-lucide-folder-open" class="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p class="text-gray-500 dark:text-gray-400">No files stored yet</p>
+                  <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                    Files will appear here after receiving DICOM data
+                  </p>
+                </div>
+              </div>
+
+              <!-- File Tree -->
+              <div v-else class="border border-gray-200 dark:border-gray-800 rounded-lg p-4 max-h-[600px] overflow-y-auto">
+                <UTree
+                  :items="fileManager.tree.value"
+                  color="neutral"
+                  size="sm"
+                  expanded-icon="i-lucide-folder-open"
+                  collapsed-icon="i-lucide-folder"
+                >
+                  <template #item-trailing="{ item }">
+                    <div class="flex items-center gap-3">
+                      <div v-if="!item.isDirectory" class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                        <span v-if="item.mtime">
+                          {{ fileManager.formatDate(item.mtime) }}
+                        </span>
+                        <span v-if="item.size">
+                          {{ fileManager.formatFileSize(item.size) }}
+                        </span>
+                      </div>
+                      <div v-if="!item.isDirectory" class="flex gap-1" @click.stop>
+                        <UButton
+                          icon="i-lucide-download"
+                          color="neutral"
+                          variant="ghost"
+                          size="xs"
+                          @click="fileManager.downloadFile(item.path)"
+                        />
+                        <UButton
+                          icon="i-lucide-trash-2"
+                          color="error"
+                          variant="ghost"
+                          size="xs"
+                          @click="confirmDelete(item.path, item.label)"
+                        />
+                      </div>
+                    </div>
+                  </template>
+                </UTree>
+              </div>
+            </div>
+          </div>
+
           <!-- Logs Tab -->
           <div v-if="activeTab === 'logs'" class="space-y-4">
             <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
@@ -271,7 +381,22 @@
                     {{ liveLogs.isConnected.value ? 'Live' : 'Offline' }}
                   </UBadge>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex items-center gap-2">
+                  <!-- Log Level Selector -->
+                  <USelectMenu
+                    v-model="selectedLogLevel"
+                    :items="logLevelOptions"
+                    size="sm"
+                    color="neutral"
+                    variant="outline"
+                    icon="i-lucide-filter"
+                    class="w-32"
+                    @update:model-value="updateLogLevel"
+                  >
+                    <template #item-leading="{ item }">
+                      <UIcon :name="item.icon" class="w-4 h-4" />
+                    </template>
+                  </USelectMenu>
                   <UButton
                     icon="i-lucide-trash-2"
                     color="neutral"
@@ -318,6 +443,47 @@
       </div>
     </div>
   </div>
+
+  <!-- Cleanup Dialog -->
+  <UModal
+    v-model:open="showCleanupDialog"
+    title="Cleanup Old Files"
+    description="This will permanently delete all files older than the specified number of days."
+  >
+    <template #body>
+      <div class="mb-6">
+        <label class="block text-sm font-medium mb-2">Delete files older than:</label>
+        <div class="flex items-center gap-2">
+          <input
+            v-model.number="cleanupDays"
+            type="number"
+            min="1"
+            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+          >
+          <span class="text-sm text-gray-600 dark:text-gray-400">days</span>
+        </div>
+      </div>
+    </template>
+
+    <template #footer="{ close }">
+      <UButton
+        label="Cancel"
+        color="neutral"
+        variant="outline"
+        @click="close"
+      />
+      <UButton
+        label="Delete Files"
+        color="warning"
+        icon="i-lucide-trash-2"
+        :loading="fileManager.isLoading.value"
+        @click="performCleanup"
+      />
+    </template>
+  </UModal>
+
+  <!-- Confirm Modal -->
+  <NUtilsConfirmModal />
 </template>
 
 <script setup lang="ts">
@@ -339,9 +505,12 @@ interface DicomService {
 const componentRouter = useComponentRouter()
 const activeTab = ref('configuration')
 const actionLoading = ref(false)
+const showCleanupDialog = ref(false)
+const cleanupDays = ref(30)
 
 const tabs = [
   { label: 'Configuration', value: 'configuration' },
+  { label: 'Files', value: 'files' },
   { label: 'Logs', value: 'logs' },
 ]
 
@@ -351,6 +520,68 @@ const serviceName = computed(() => {
 
 // Initialize live logs composable
 const liveLogs = useLiveServiceLogs(serviceName.value)
+
+// Initialize file manager composable
+const fileManager = useServiceFiles(serviceName.value)
+
+// Initialize log level composable
+const logLevelManager = useLogLevel()
+
+// Initialize confirm modal
+const confirm = useConfirmModal()
+
+// Count total files in tree
+function countFiles(items: any[]): number {
+  let count = 0
+  for (const item of items) {
+    if (!item.isDirectory) {
+      count++
+    }
+    if (item.children) {
+      count += countFiles(item.children)
+    }
+  }
+  return count
+}
+
+// Log level options with icons
+const logLevelOptions = [
+  { label: 'Debug', value: 'debug', icon: 'i-lucide-bug' },
+  { label: 'Info', value: 'info', icon: 'i-lucide-info' },
+  { label: 'Warning', value: 'warn', icon: 'i-lucide-triangle-alert' },
+  { label: 'Error', value: 'error', icon: 'i-lucide-circle-x' },
+]
+
+const selectedLogLevel = ref(logLevelOptions[1]) // Default to 'info'
+
+// Fetch current log levels on mount
+onMounted(async () => {
+  await logLevelManager.fetchLogLevels()
+  const effectiveLevel = logLevelManager.getEffectiveLevel(serviceName.value)
+  selectedLogLevel.value = logLevelOptions.find(opt => opt.value === effectiveLevel) || logLevelOptions[1]
+  
+  // Fetch files when Files tab is active or when switching to it
+  if (activeTab.value === 'files') {
+    await fileManager.fetchFiles()
+  }
+})
+
+// Watch for tab changes to load files on demand
+watch(activeTab, async (newTab) => {
+  if (newTab === 'files' && fileManager.tree.value.length === 0 && !fileManager.error.value) {
+    await fileManager.fetchFiles()
+  }
+})
+
+// Update log level
+async function updateLogLevel(option: typeof logLevelOptions[0]) {
+  try {
+    await logLevelManager.setServiceLevel(serviceName.value, option.value as any)
+  }
+  catch (err) {
+    console.error('Failed to update log level:', err)
+  }
+}
 
 // Transform function for service data
 const transformService = (data: unknown): DicomService => {
@@ -447,6 +678,37 @@ async function restartService() {
 
 function goBack() {
   componentRouter.push('/services')
+}
+
+async function confirmDelete(path: string, name: string) {
+  const result = await confirm({
+    title: 'Delete File',
+    description: `Are you sure you want to delete "${name}"?`,
+    dangerous: true,
+    icon: 'i-lucide-trash-2',
+    iconColor: 'error',
+    confirmLabel: 'Delete',
+    cancelLabel: 'Cancel',
+  })
+  
+  if (result.confirmed) {
+    try {
+      await fileManager.deleteFile(path)
+    }
+    catch (err) {
+      // Error is already logged and set in the composable
+    }
+  }
+}
+
+async function performCleanup() {
+  try {
+    await fileManager.cleanupOldFiles(cleanupDays.value)
+    showCleanupDialog.value = false
+  }
+  catch (err) {
+    // Error is already logged and set in the composable
+  }
 }
 
 function downloadLogs() {

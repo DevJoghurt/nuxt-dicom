@@ -11,16 +11,16 @@ export const config = defineDicomEventConfig({
   description: 'Processes completed DICOM studies',
 })
 
-export default defineDicomEvent('storeScp_onStudyCompleted', async (payload) => {
-  const studyInfo = {
-    studyUid: payload.studyInstanceUid,
-    seriesCount: payload.series.length,
-    instanceCount: payload.series.reduce((sum: number, s: any) => sum + s.instances.length, 0),
-    patientName: payload.tags?.PatientName,
-    studyDate: payload.tags?.StudyDate,
-  }
+export default defineDicomEvent('storeScp_onStudyCompleted', async (payload, { logger }) => {
+  // Calculate metadata for logging
+  const seriesCount = payload.series.length
+  const instanceCount = payload.series.reduce((sum: number, s: any) => sum + s.instances.length, 0)
 
-  console.log('[StoreSCP] Study completed:', studyInfo)
+  logger.info(
+    'storeScp_1',
+    `Study completed: ${payload.studyInstanceUid} (${seriesCount} series, ${instanceCount} instances)`,
+    { seriesCount, instanceCount },
+  )
 
   // Example: Trigger post-processing
   // await $fetch('/api/dicom/process-study', {

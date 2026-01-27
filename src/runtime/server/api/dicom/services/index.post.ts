@@ -1,5 +1,5 @@
 import { defineEventHandler, readBody, storeSCPServiceManager, dicomServiceRegistry } from '#imports'
-import type { StoreScpConfig } from '#imports'
+import type { StoreScpConfig } from '../../../utils/schema'
 
 /**
  * POST /api/dicom/services

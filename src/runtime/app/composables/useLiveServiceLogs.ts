@@ -71,11 +71,12 @@ export function useLiveServiceLogs(serviceName: string) {
           const data = JSON.parse(event.data)
 
           if (data.type === 'log' && data.entry) {
-            logs.value.push(data.entry)
+            // Add new logs at the beginning (latest first)
+            logs.value.unshift(data.entry)
 
             // Keep only last 1000 logs in memory
             if (logs.value.length > 1000) {
-              logs.value.shift()
+              logs.value.pop()
             }
           }
           else if (data.type === 'ready') {

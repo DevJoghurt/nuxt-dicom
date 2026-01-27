@@ -1,61 +1,505 @@
-# Nuxt Dicom
+# Nuxt DICOM
 
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
 [![License][license-src]][license-href]
 [![Nuxt][nuxt-src]][nuxt-href]
 
-Use dicom tools inside your nuxt project
+A comprehensive Nuxt module for working with DICOM (Digital Imaging and Communications in Medicine) files. Includes a Rust-based StoreSCP server, event-driven architecture, file management UI, and more.
 
 ## Features
 
-- Run a rust based StoreSCP next to the node server
-- Easy api and UI to manage the process
-- Read and create dicom files
-- StoreSCU
+- 🏥 **StoreSCP Server** - Rust-based DICOM receiver running alongside your Nuxt app
+- 🎯 **Event-Driven** - React to DICOM events with server-side handlers
+- 📁 **File Management** - Browse, download, and delete stored DICOM files via UI
+- 🧹 **Auto Cleanup** - Automatic deletion of old files with configurable retention
+- 📊 **Service Management** - Start/stop services and view live logs through UI
+- 🔧 **Tag Extraction** - Configure which DICOM tags to extract automatically
+- 📝 **Log Levels** - Configurable logging with runtime control
+- 🎨 **Built-in UI** - Beautiful admin interface powered by Nuxt UI
 
-## Quick Setup
-
-Install the module to your Nuxt application with one command:
+## Installation
 
 ```bash
-npx nuxi module add nuxt-dicom
+npm install @nuxthealth/dicom @nuxthealth/node-dicom
 ```
 
-That's it! You can now use My Module in your Nuxt app ✨
+## Quick Start
 
+### 1. Add Module to Config
 
-## Contribution
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@nuxthealth/dicom'],
+  
+  dicom: {
+    // Service configuration
+    services: {
+      storeScp: {
+        name: 'storeScp_1',
+        port: 11112,
+        callingAETitle: 'STORESCP',
+        outDir: './dicom-storage',
+        autoStart: true,
+        extractTags: [
+          'PatientName',
+          'PatientID',
+          'StudyDate',
+          'Modality'
+        ]
+      }
+    },
+    
+    // Optional: Auto-delete old files
+    autoDeleteAfterDays: 30, // 0 = disabled
+    
+    // Optional: Default log level
+    logLevel: 'info' // 'debug' | 'info' | 'warn' | 'error'
+  }
+})
+```
 
-<details>
-  <summary>Local development</summary>
+### 2. Create Event Handlers
 
-  ```bash
-  # Install dependencies
-  npm install
+Create handlers in `server/dicom/` directory:
 
-  # Generate type stubs
-  npm run dev:prepare
+```typescript
+// server/dicom/storeScp.onFileStored.ts
+import { defineDicomEvent } from '#imports'
 
-  # Develop with the playground
-  npm run dev
+export default defineDicomEvent('storeScp_onFileStored', async (payload) => {
+  console.log('File received:', {
+    file: payload.file,
+    patient: payload.tags?.PatientName,
+    modality: payload.tags?.Modality,
+    studyDate: payload.tags?.StudyDate
+  })
+  
+  // Your custom logic here
+})
+```
 
-  # Build the playground
-  npm run dev:build
+### 3. Access the UI
 
-  # Run ESLint
-  npm run lint
+Start your development server:
 
-  # Run Vitest
-  npm run test
-  npm run test:watch
+```bash
+npm run dev
+```
 
-  # Release new version
-  npm run release
-  ```
+Navigate to `/_dicom` to access the management interface where you can:
+- View service status
+- Start/stop services
+- Browse stored files
+- View live logs
+- Manage file cleanup
 
-</details>
+## Configuration
 
+### Service Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `name` | `string` | Required | Unique service identifier |
+| `port` | `number` | Required | Port for DICOM server |
+| `callingAETitle` | `string` | `'STORESCP'` | Application Entity Title |
+| `outDir` | `string` | `'./dicom-storage'` | Directory for storing files |
+| `autoStart` | `boolean` | `true` | Start service automatically |
+| `extractTags` | `string[]` | `[]` | DICOM tags to extract |
+
+### Module Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `services` | `object` | `{}` | Service configurations |
+| `autoDeleteAfterDays` | `number` | `0` | Days before auto-deletion (0 = disabled) |
+| `logLevel` | `string` | `'info'` | Default log level for all services |
+| `serviceLogs` | `object` | `{}` | Per-service log level overrides |
+
+### Example: Multiple Services
+
+```typescript
+export default defineNuxtConfig({
+  dicom: {
+    services: {
+      storeScp: {
+        name: 'primary_scp',
+        port: 11112,
+        outDir: './storage/primary'
+      },
+      storeScp2: {
+        name: 'backup_scp',
+        port: 11113,
+        outDir: './storage/backup'
+      }
+    },
+    logLevel: 'info',
+    serviceLogs: {
+      primary_scp: 'debug',  // Override for specific service
+      backup_scp: 'warn'
+    }
+  }
+})
+```
+
+## Event Handlers
+
+### Available Events
+
+| Event | When Triggered | Payload |
+|-------|---------------|---------|
+| `OnFileStored` | After each DICOM file is received | `{ file, tags, studyInstanceUid, seriesInstanceUid }` |
+| `OnStudyCompleted` | When a study is complete | `{ studyInstanceUid, series[], totalInstances }` |
+| `OnServerStarted` | When service starts | `{ name, port, callingAETitle }` |
+| `OnError` | On service error | `{ error, context }` |
+
+### Creating Event Handlers
+
+Create TypeScript files in the `server/dicom/` directory. File names can be anything (e.g., `storeScp.onFileStored.ts`), but the **event ID** passed to `defineDicomEvent()` must match the format `{serviceName}_{eventType}`.
+
+**Available event IDs:**
+- `storeScp_onFileStored` - After each file is received
+- `storeScp_onStudyCompleted` - When a study is complete
+- `storeScp_onServerStarted` - When service starts
+- `storeScp_onError` - On service error
+
+**Handler signature:**
+```typescript
+defineDicomEvent(eventId, async (payload, context) => {
+  // payload: Event-specific data
+  // context: { logger } - Built-in logger instance
+})
+```
+
+**Basic example:**
+```typescript
+// server/dicom/storeScp.onFileStored.ts
+import { defineDicomEvent } from '#imports'
+
+export default defineDicomEvent('storeScp_onFileStored', async (payload, { logger }) => {
+  // Use the logger (respects configured log levels)
+  logger.info('storeScp_1', `File received: ${payload.sopInstanceUid}`)
+  
+  // Access extracted tags
+  const patientName = payload.tags?.PatientName
+  const modality = payload.tags?.Modality
+  
+  logger.debug('storeScp_1', `Patient: ${patientName}, Modality: ${modality}`)
+})
+```
+
+**Using logger methods:**
+```typescript
+export default defineDicomEvent('storeScp_onStudyCompleted', async (payload, { logger }) => {
+  const fileCount = payload.series.reduce((sum, s) => 
+    sum + s.instances.length, 0
+  )
+  
+  // Log at different levels
+  logger.info('storeScp_1', `Study completed: ${fileCount} files`)
+  logger.debug('storeScp_1', `Study UID: ${payload.studyInstanceUid}`)
+  logger.warn('storeScp_1', 'Low file count') // if fileCount < threshold
+  logger.error('storeScp_1', 'Processing failed') // on error
+})
+```
+
+### Payload Types
+
+```typescript
+// OnFileStored payload
+interface OnFileStoredPayload {
+  file: string                    // Absolute file path
+  tags?: Record<string, any>      // Extracted DICOM tags
+  studyInstanceUid: string
+  seriesInstanceUid: string
+  sopInstanceUid: string
+}
+
+// OnStudyCompleted payload
+interface OnStudyCompletedPayload {
+  studyInstanceUid: string
+  series: Array<{
+    seriesInstanceUid: string
+    instances: Array<{
+      sopInstanceUid: string
+      file: string
+    }>
+  }>
+  totalInstances: number
+}
+```
+
+## File Management
+
+### Browse Files via UI
+
+Navigate to `/services/[serviceName]` → **Files** tab:
+
+- View files in hierarchical tree structure (Study → Series → Instances)
+- See file creation date and size
+- Download individual files
+- Delete files with confirmation
+- Cleanup old files with custom retention period
+
+### Programmatic Access
+
+```typescript
+// In your server API route
+import { useStorage } from '#imports'
+
+export default defineEventHandler(async (event) => {
+  const storage = useStorage('dicom:storeScp_1')
+  
+  // List all files
+  const files = await storage.getKeys()
+  
+  // Get file metadata
+  const meta = await storage.getMeta('study:series:instance.dcm')
+  
+  // Read file
+  const buffer = await storage.getItemRaw('study:series:instance.dcm')
+  
+  return { files, meta }
+})
+```
+
+### File Cleanup
+
+#### Automatic Cleanup
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+  dicom: {
+    autoDeleteAfterDays: 30  // Delete files older than 30 days
+  }
+})
+```
+
+When enabled:
+- Initial cleanup runs 5 seconds after server start
+- Daily cleanup runs at midnight
+- Applies to all services
+- Logs deleted file count
+
+#### Manual Cleanup via UI
+
+1. Go to service Files tab
+2. Click "Cleanup Old Files"
+3. Enter number of days
+4. Confirm deletion
+
+#### Programmatic Cleanup
+
+```typescript
+import { cleanupOldFiles } from '#imports'
+
+// Cleanup specific service
+const result = await cleanupOldFiles('storeScp_1', 30)
+
+console.log(`Deleted ${result.deletedCount} files`)
+```
+
+## Log Management
+
+### Configure Log Levels
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+  dicom: {
+    logLevel: 'info',  // Global default
+    serviceLogs: {
+      storeScp_1: 'debug',  // Per-service override
+      storeScp_2: 'warn'
+    }
+  }
+})
+```
+
+### Runtime Log Level Control
+
+Log levels can be changed at runtime via:
+- UI dropdown in service Logs tab
+- API endpoint
+
+```typescript
+// Change log level via API
+await $fetch('/api/dicom/log-level', {
+  method: 'POST',
+  body: {
+    serviceName: 'storeScp_1',
+    level: 'debug'
+  }
+})
+```
+
+### View Live Logs
+
+Navigate to `/services/[serviceName]` → **Logs** tab:
+- Real-time log streaming via WebSocket
+- Filter by log level
+- Download logs as text file
+- Clear log buffer
+
+## API Routes
+
+The module provides these API endpoints:
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/dicom/services` | List all services |
+| GET | `/api/dicom/services/:name` | Get service details |
+| POST | `/api/dicom/services/:name/start` | Start a service |
+| POST | `/api/dicom/services/:name/stop` | Stop a service |
+| GET | `/api/dicom/services/:name/files` | List files in tree structure |
+| GET | `/api/dicom/services/:name/files/download` | Download a file |
+| DELETE | `/api/dicom/services/:name/files/delete` | Delete a file |
+| POST | `/api/dicom/services/:name/cleanup` | Cleanup old files |
+| GET | `/api/dicom/log-level` | Get current log levels |
+| POST | `/api/dicom/log-level` | Update log level |
+
+## Testing
+
+### Send Test DICOM Files
+
+Using dcmtk tools:
+
+```bash
+# Install dcmtk
+brew install dcmtk  # macOS
+apt-get install dcmtk  # Ubuntu
+
+# Send a file
+storescu -aec STORESCP localhost 11112 test.dcm
+
+# Send multiple files
+storescu -aec STORESCP localhost 11112 /path/to/study/*
+```
+
+Using the included script:
+
+```bash
+# From the module directory
+node scripts/sendData.mjs
+```
+
+## Advanced Usage
+
+### Custom Storage Backend
+
+By default, files are stored in the filesystem. You can configure different storage backends:
+
+```typescript
+// Future support for S3, Azure Blob, etc.
+export default defineNuxtConfig({
+  dicom: {
+    services: {
+      storeScp: {
+        storage: {
+          type: 's3',
+          bucket: 'my-dicom-bucket',
+          region: 'us-east-1'
+        }
+      }
+    }
+  }
+})
+```
+
+### Tag Extraction
+
+Extract specific DICOM tags for use in event handlers:
+
+```typescript
+export default defineNuxtConfig({
+  dicom: {
+    services: {
+      storeScp: {
+        extractTags: [
+          // Patient Information
+          'PatientName',
+          'PatientID',
+          'PatientBirthDate',
+          'PatientSex',
+          'PatientAge',
+          
+          // Study Information
+          'StudyDate',
+          'StudyTime',
+          'StudyDescription',
+          'AccessionNumber',
+          
+          // Series Information
+          'Modality',
+          'SeriesDescription',
+          'SeriesNumber',
+          
+          // Instance Information
+          'InstanceNumber',
+          'SOPInstanceUID'
+        ]
+      }
+    }
+  }
+})
+```
+
+## Troubleshooting
+
+### Service Won't Start
+
+- Check if port is already in use: `lsof -i :[port]`
+- Verify `outDir` has write permissions
+- Check logs in the UI for error details
+
+### Files Not Appearing
+
+- Ensure `outDir` is correctly configured
+- Check service is running (green status badge)
+- Verify sender is using correct AE Title
+- Check service logs for incoming connections
+
+### Events Not Firing
+
+- Verify event ID matches format: `{serviceName}_{eventType}` (e.g., `'storeScp_onFileStored'`)
+- Check handler exports with `export default defineDicomEvent(...)`
+- Ensure handler is in `server/dicom/` directory
+- Restart dev server after creating new handlers
+- Check console for event registration messages
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Generate type stubs
+npm run dev:prepare
+
+# Develop with playground
+npm run dev
+
+# Build
+npm run dev:build
+
+# Run tests
+npm run test
+
+# Lint
+npm run lint
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+MIT
+
+---
 
 <!-- Badges -->
 [npm-version-src]: https://img.shields.io/npm/v/@nuxthealth/dicom/latest.svg?style=flat&colorA=020420&colorB=00DC82

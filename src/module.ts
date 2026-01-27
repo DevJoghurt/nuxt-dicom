@@ -29,6 +29,23 @@ export interface ModuleOptions {
    * @default false
    */
   layout?: string | false
+  /**
+   * Default log level for all services
+   * Can be overridden per service or at runtime via API
+   * @default 'info'
+   */
+  logLevel?: 'debug' | 'info' | 'warn' | 'error'
+  /**
+   * Per-service log level overrides
+   * @example { storeScp_1: 'debug', storeScp_2: 'warn' }
+   */
+  serviceLogs?: Record<string, 'debug' | 'info' | 'warn' | 'error'>
+  /**
+   * Automatically delete files older than specified days
+   * Set to 0 to disable auto-deletion
+   * @default 0
+   */
+  autoDeleteAfterDays?: number
   services?: {
     storeScp?: StoreScpConfig | StoreScpConfig[]
   }
@@ -45,6 +62,8 @@ export default defineNuxtModule<ModuleOptions>({
     route: true,
     routePath: '/_dicom',
     layout: false,
+    logLevel: 'info',
+    serviceLogs: {},
     services: {
       storeScp: undefined,
     },
@@ -66,9 +85,6 @@ export default defineNuxtModule<ModuleOptions>({
       from: resolver.resolve('./runtime/utils/schema'),
       name: 'DicomConfigSchemas',
     }, {
-      from: resolver.resolve('./runtime/utils/schema'),
-      name: 'StoreScpConfig',
-    }, {
       from: resolver.resolve('./runtime/utils/dicomEvents'),
       name: 'dicomEventEmitter',
     }, {
@@ -83,6 +99,9 @@ export default defineNuxtModule<ModuleOptions>({
     }, {
       from: resolver.resolve('./runtime/utils/defineDicomEvent'),
       name: 'emitDicomEvent',
+    }, {
+      from: resolver.resolve('./runtime/utils/logger'),
+      name: 'dicomLogger',
     }])
 
     // Add components directory
@@ -100,6 +119,16 @@ export default defineNuxtModule<ModuleOptions>({
     addImports({
       name: 'useLiveServiceLogs',
       from: resolver.resolve('./runtime/app/composables/useLiveServiceLogs'),
+    })
+
+    addImports({
+      name: 'useLogLevel',
+      from: resolver.resolve('./runtime/app/composables/useLogLevel'),
+    })
+
+    addImports({
+      name: 'useServiceFiles',
+      from: resolver.resolve('./runtime/app/composables/useServiceFiles'),
     })
 
     // Add route if enabled
@@ -215,6 +244,9 @@ export default defineNuxtModule<ModuleOptions>({
 
     // Add to runtime config - simple list of configured services
     runtimeConfig.dicom = defu(runtimeConfig?.dicom || {}, {
+      logLevel: options.logLevel,
+      serviceLogs: options.serviceLogs,
+      autoDeleteAfterDays: options.autoDeleteAfterDays || 0,
       services: registeredServices,
       handlers: scannedHandlers.map(handler => ({
         serviceName: handler.serviceName,

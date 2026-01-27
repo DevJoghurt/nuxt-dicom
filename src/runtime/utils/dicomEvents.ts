@@ -2,10 +2,25 @@ import type { ScpEventDetails, StudyHierarchyData, SeriesHierarchyData } from '@
 import type { DicomEventType } from '../../types'
 
 /**
+ * Context object passed to DICOM event handlers
+ */
+export interface DicomEventContext {
+  logger: typeof import('./logger').dicomLogger
+}
+
+/**
  * Event handler type for DICOM events
  */
 export interface DicomEventHandler<T = unknown> {
-  (data: T): void | Promise<void>
+  (data: T, context: DicomEventContext): void | Promise<void>
+}
+
+/**
+ * Event handler configuration
+ */
+export interface EventHandlerConfig {
+  name?: string
+  description?: string
 }
 
 /**
@@ -24,19 +39,26 @@ export interface DicomEventPayloadMap {
  */
 interface EventRegistry {
   [serviceName: string]: {
-    [eventType in DicomEventType]?: DicomEventHandler[]
+    [eventType in DicomEventType]?: Array<{
+      handler: DicomEventHandler
+      config?: EventHandlerConfig
+    }>
   }
 }
 
 class DicomEventEmitter {
   private handlers: EventRegistry = {}
   private allHandlers: Map<string, DicomEventHandler> = new Map()
+  private handlerConfigs: Map<string, EventHandlerConfig> = new Map()
 
   /**
    * Register a named handler for global access
    */
-  registerNamedHandler(name: string, handler: DicomEventHandler): void {
+  registerNamedHandler(name: string, handler: DicomEventHandler, config?: EventHandlerConfig): void {
     this.allHandlers.set(name, handler)
+    if (config) {
+      this.handlerConfigs.set(name, config)
+    }
   }
 
   /**
@@ -53,6 +75,7 @@ class DicomEventEmitter {
     serviceName: string,
     eventType: DicomEventType,
     handler: DicomEventHandler,
+    config?: EventHandlerConfig,
   ): void {
     if (!this.handlers[serviceName]) {
       this.handlers[serviceName] = {}
@@ -62,7 +85,7 @@ class DicomEventEmitter {
       this.handlers[serviceName][eventType] = []
     }
 
-    this.handlers[serviceName][eventType]!.push(handler)
+    this.handlers[serviceName][eventType]!.push({ handler, config })
   }
 
   /**
@@ -73,16 +96,24 @@ class DicomEventEmitter {
     eventType: DicomEventType,
     data: unknown,
   ): Promise<void> {
-    const handlers = this.handlers[serviceName]?.[eventType] || []
+    const handlerEntries = this.handlers[serviceName]?.[eventType] || []
 
-    for (const handler of handlers) {
+    // Import logger dynamically to avoid circular dependencies
+    const { dicomLogger } = await import('./logger')
+
+    const context: DicomEventContext = {
+      logger: dicomLogger,
+    }
+
+    for (const { handler, config } of handlerEntries) {
       try {
-        await handler(data)
+        await handler(data, context)
       }
       catch (error) {
-        console.error(
-          `Error in DICOM event handler for ${serviceName}.${eventType}:`,
-          error,
+        dicomLogger.error(
+          serviceName,
+          `Error in event handler for ${eventType}${config?.name ? ` (${config.name})` : ''}`,
+          { error: error instanceof Error ? error.message : String(error) },
         )
       }
     }

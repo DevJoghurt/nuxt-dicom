@@ -42,11 +42,14 @@ export function defineDicomEventConfig(config: DefineDicomEventConfig): DefineDi
  * // server/dicom/storeScp.onFileStored.ts
  * export const config = defineDicomEventConfig({
  *   name: 'logFileStorage',
- *   description: 'Logs received DICOM files'
+ *   description: 'Logs received DICOM files',
+ *   logLevel: 'info',
+ *   logMessage: 'File received: {sopInstanceUid}'
  * })
  *
  * export default defineDicomEvent('storeScp_onFileStored', async (payload) => {
  *   // payload is typed as OnFileStoredPayload with full autocomplete
+ *   // Automatic logging based on config.logLevel
  *   console.log('File:', payload.file, 'SOP:', payload.sopInstanceUid)
  * })
  * ```
@@ -54,6 +57,7 @@ export function defineDicomEventConfig(config: DefineDicomEventConfig): DefineDi
 export function defineDicomEvent<EventId extends DicomEventType>(
   eventId: EventId,
   handler: DicomEventHandler<DicomEventPayloadMap[EventId]>,
+  config?: DefineDicomEventConfig,
 ) {
   // Extract service and eventType from combined format (e.g., 'storeScp_onFileStored')
   const [service, ...eventParts] = eventId.split('_')
@@ -65,6 +69,7 @@ export function defineDicomEvent<EventId extends DicomEventType>(
     service,
     eventType,
     handler,
+    config: config || {},
   }
 }
 
@@ -75,8 +80,9 @@ export function registerDicomEvent(
   serviceName: string,
   eventType: DicomEventType,
   handler: DicomEventHandler,
+  config?: import('./dicomEvents').EventHandlerConfig,
 ) {
-  dicomEventEmitter.on(serviceName, eventType, handler)
+  dicomEventEmitter.on(serviceName, eventType, handler, config)
 }
 
 /**

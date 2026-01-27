@@ -118,9 +118,11 @@ export default defineWebSocketHandler({
       if (data.type === 'identify' && data.serviceName) {
         const newServiceName = data.serviceName
 
-        // If this is a new service name and we had a subscription, update it
-        if (newServiceName !== serviceName && serviceName !== 'unknown') {
-          // Unsubscribe from old service
+        // If service name is different, update subscription
+        if (newServiceName !== serviceName) {
+          dicomLogger.debug(newServiceName, `WebSocket re-subscribing from ${serviceName} to ${newServiceName}`)
+          
+          // Unsubscribe from old service if there was one
           const oldUnsubscribe = peerStorage._unsubscribe
           if (oldUnsubscribe) {
             oldUnsubscribe()
