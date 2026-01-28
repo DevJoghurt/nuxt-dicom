@@ -1,4 +1,4 @@
-import type { DicomEventType } from '../../types'
+import type { DicomEventType } from '../types'
 import { dicomEventEmitter, type DicomEventHandler, type DicomEventPayloadMap } from './dicomEvents'
 
 /**

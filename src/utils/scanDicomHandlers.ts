@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs'
 import { join, extname, basename } from 'node:path'
-import { DicomEventTypeEnum } from '../types'
+import { DicomEventTypeEnum } from '../runtime/types'
 
 /**
  * Scanned DICOM event handler metadata

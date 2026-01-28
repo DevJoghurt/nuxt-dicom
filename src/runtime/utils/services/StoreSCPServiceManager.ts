@@ -5,7 +5,7 @@ import type { OnBeforeStorePayload, OnFileStoredPayload, OnStudyCompletedPayload
 import { dicomEventEmitter } from '../dicomEvents'
 import { emitDicomEvent } from '../defineDicomEvent'
 import { dicomLogger } from '../logger'
-import { DICOM_EVENTS } from '../../../types'
+import { DICOM_EVENTS } from '../../types'
 import { BaseServiceManager } from './BaseServiceManager'
 
 /**

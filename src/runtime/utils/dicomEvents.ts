@@ -1,5 +1,5 @@
 import type { ScpEventDetails, StudyHierarchyData, SeriesHierarchyData } from '@nuxthealth/node-dicom'
-import type { DicomEventType } from '../../types'
+import type { DicomEventType } from '../types'
 
 /**
  * Context object passed to DICOM event handlers
