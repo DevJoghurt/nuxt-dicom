@@ -1,6 +1,6 @@
 {
   "name": "@nuxthealth/dicom",
-  "version": "0.1.0-beta.1",
+  "version": "0.2.0-beta.1",
   "description": "Nuxt module for DICOM",
   "license": "MIT",
   "type": "module",
