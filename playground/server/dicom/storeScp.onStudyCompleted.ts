@@ -17,7 +17,6 @@ export default defineDicomEvent('storeScp_onStudyCompleted', async (payload, { l
   const instanceCount = payload.series.reduce((sum: number, s: { instances: unknown[] }) => sum + s.instances.length, 0)
 
   logger.info(
-    'storeScp_1',
     `Study completed: ${payload.studyInstanceUid} (${seriesCount} series, ${instanceCount} instances)`,
     { seriesCount, instanceCount },
   )

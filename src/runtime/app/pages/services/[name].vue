@@ -529,7 +529,7 @@
               </div>
 
               <!-- Logs Display -->
-              <div class="bg-gray-900 rounded p-4 text-gray-300 font-mono text-sm h-96 overflow-y-auto space-y-0.5">
+              <div class="bg-gray-900 rounded p-4 text-gray-300 font-mono text-sm h-96 overflow-y-auto space-y-1">
                 <div
                   v-if="liveLogs.logs.value.length === 0"
                   class="text-gray-500"
@@ -539,9 +539,20 @@
                 <div
                   v-for="(entry, index) in liveLogs.logs.value"
                   :key="index"
-                  :class="['whitespace-pre-wrap break-words', liveLogs.getLevelClass(entry.level)]"
+                  class="group"
                 >
-                  {{ liveLogs.formatLogEntry(entry) }}
+                  <div :class="['whitespace-pre-wrap break-words', liveLogs.getLevelClass(entry.level)]">
+                    {{ liveLogs.formatLogEntry(entry) }}
+                  </div>
+                  <details
+                    v-if="liveLogs.hasMetadata(entry)"
+                    class="ml-4 mt-0.5 text-xs"
+                  >
+                    <summary class="cursor-pointer text-gray-500 hover:text-gray-400 select-none">
+                      <span class="inline-block w-3 text-center">▸</span> metadata
+                    </summary>
+                    <pre class="mt-1 p-2 bg-gray-800 rounded text-gray-400 overflow-x-auto">{{ JSON.stringify(entry.metadata, null, 2) }}</pre>
+                  </details>
                 </div>
               </div>
             </div>

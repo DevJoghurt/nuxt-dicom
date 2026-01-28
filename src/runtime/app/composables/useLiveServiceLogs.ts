@@ -22,13 +22,19 @@ export function useLiveServiceLogs(serviceName: string) {
   let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
 
   /**
-   * Format log entry for display
+   * Format log entry for display (without metadata)
    */
   function formatLogEntry(entry: LogEntryDisplay): string {
     const time = new Date(entry.timestamp).toLocaleTimeString()
     const levelTag = `[${entry.level.toUpperCase()}]`
-    const meta = entry.metadata ? ` ${JSON.stringify(entry.metadata)}` : ''
-    return `${time} ${levelTag} ${entry.message}${meta}`
+    return `${time} ${levelTag} ${entry.message}`
+  }
+
+  /**
+   * Check if log entry has metadata
+   */
+  function hasMetadata(entry: LogEntryDisplay): boolean {
+    return !!entry.metadata && Object.keys(entry.metadata).length > 0
   }
 
   /**
@@ -164,6 +170,7 @@ export function useLiveServiceLogs(serviceName: string) {
     error: readonly(error),
     formatLogEntry,
     getLevelClass,
+    hasMetadata,
     clearLogs,
     exportLogs,
     connect,

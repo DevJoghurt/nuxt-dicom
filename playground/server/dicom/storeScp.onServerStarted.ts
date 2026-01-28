@@ -12,7 +12,7 @@ export const config = defineDicomEventConfig({
 })
 
 export default defineDicomEvent('storeScp_onServerStarted', async (payload, { logger }) => {
-  logger.info('storeScp_1', 'Server ready and listening for DICOM connections')
+  logger.info('Server ready and listening for DICOM connections')
 
   // Example: Notify monitoring system
   // await $fetch('https://monitoring.example.com/dicom-service-up', {

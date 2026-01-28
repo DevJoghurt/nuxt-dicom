@@ -2,10 +2,21 @@ import type { ScpEventDetails, StudyHierarchyData, SeriesHierarchyData } from '@
 import type { DicomEventType } from '../types'
 
 /**
+ * Service-specific logger that automatically includes the service name
+ */
+export interface ServiceLogger {
+  debug: (message: string, metadata?: Record<string, unknown>) => void
+  info: (message: string, metadata?: Record<string, unknown>) => void
+  warn: (message: string, metadata?: Record<string, unknown>) => void
+  error: (message: string, metadata?: Record<string, unknown>) => void
+}
+
+/**
  * Context object passed to DICOM event handlers
  */
 export interface DicomEventContext {
-  logger: typeof import('./logger').dicomLogger
+  logger: ServiceLogger
+  serviceName: string
 }
 
 /**
@@ -101,8 +112,21 @@ class DicomEventEmitter {
     // Import logger dynamically to avoid circular dependencies
     const { dicomLogger } = await import('./logger')
 
+    // Create a service-specific logger wrapper that automatically includes the service name
+    const serviceLogger: ServiceLogger = {
+      debug: (message: string, metadata?: Record<string, unknown>) =>
+        dicomLogger.debug(serviceName, message, metadata),
+      info: (message: string, metadata?: Record<string, unknown>) =>
+        dicomLogger.info(serviceName, message, metadata),
+      warn: (message: string, metadata?: Record<string, unknown>) =>
+        dicomLogger.warn(serviceName, message, metadata),
+      error: (message: string, metadata?: Record<string, unknown>) =>
+        dicomLogger.error(serviceName, message, metadata),
+    }
+
     const context: DicomEventContext = {
-      logger: dicomLogger,
+      logger: serviceLogger,
+      serviceName,
     }
 
     for (const { handler, config } of handlerEntries) {

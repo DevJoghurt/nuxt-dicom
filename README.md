@@ -68,8 +68,8 @@ Create handlers in `server/dicom/` directory:
 // server/dicom/storeScp.onFileStored.ts
 import { defineDicomEvent } from '#imports'
 
-export default defineDicomEvent('storeScp_onFileStored', async (payload) => {
-  console.log('File received:', {
+export default defineDicomEvent('storeScp_onFileStored', async (payload, { logger }) => {
+  logger.info('File received', {
     file: payload.file,
     patient: payload.tags?.PatientName,
     modality: payload.tags?.Modality,
@@ -274,7 +274,9 @@ Create TypeScript files in the `server/dicom/` directory. File names can be anyt
 ```typescript
 defineDicomEvent(eventId, async (payload, context) => {
   // payload: Event-specific data
-  // context: { logger } - Built-in logger instance
+  // context: { logger, serviceName }
+  //   - logger: Service-scoped logger (automatically includes service name)
+  //   - serviceName: Name of the service that triggered this event
 })
 ```
 
@@ -284,14 +286,14 @@ defineDicomEvent(eventId, async (payload, context) => {
 import { defineDicomEvent } from '#imports'
 
 export default defineDicomEvent('storeScp_onFileStored', async (payload, { logger }) => {
-  // Use the logger (respects configured log levels)
-  logger.info('storeScp_1', `File received: ${payload.sopInstanceUid}`)
+  // Logger is automatically scoped to the service - no need to pass service name!
+  logger.info(`File received: ${payload.sopInstanceUid}`)
   
   // Access extracted tags
   const patientName = payload.tags?.PatientName
   const modality = payload.tags?.Modality
   
-  logger.debug('storeScp_1', `Patient: ${patientName}, Modality: ${modality}`)
+  logger.debug(`Patient: ${patientName}, Modality: ${modality}`)
 })
 ```
 
@@ -302,11 +304,18 @@ export default defineDicomEvent('storeScp_onStudyCompleted', async (payload, { l
     sum + s.instances.length, 0
   )
   
-  // Log at different levels
-  logger.info('storeScp_1', `Study completed: ${fileCount} files`)
-  logger.debug('storeScp_1', `Study UID: ${payload.studyInstanceUid}`)
-  logger.warn('storeScp_1', 'Low file count') // if fileCount < threshold
-  logger.error('storeScp_1', 'Processing failed') // on error
+  // Log at different levels - service name is automatically included
+  logger.info(`Study completed: ${fileCount} files`)
+  logger.debug(`Study UID: ${payload.studyInstanceUid}`)
+  logger.warn('Low file count', { fileCount, threshold: 10 })
+  logger.error('Processing failed', { error: 'Disk full' })
+  
+  // Metadata objects are displayed as expandable JSON in the UI
+  logger.info('Study details', {
+    studyInstanceUid: payload.studyInstanceUid,
+    seriesCount: payload.series.length,
+    fileCount
+  })
 })
 ```
 

@@ -15,7 +15,7 @@ export const config = defineDicomEventConfig({
 })
 
 export default defineDicomEvent('storeScp_onFileStored', async (payload, { logger }) => {
-  logger.info('storeScp_1', `File received: ${payload.sopInstanceUid} (Study: ${payload.studyInstanceUid})`)
+  logger.info(`File received: ${payload.sopInstanceUid} (Study: ${payload.studyInstanceUid})`)
 
   // Example: Store file metadata in database
   // const db = useDatabase('dicom')
