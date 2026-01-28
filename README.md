@@ -95,6 +95,112 @@ Navigate to `/_dicom` to access the management interface where you can:
 - View live logs
 - Manage file cleanup
 
+## Using the DICOM UI Component
+
+### Built-in Route (Recommended)
+
+By default, the DICOM UI is available at `/_dicom`. To use it:
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+  dicom: {
+    route: true,        // Enable the route (default)
+    routePath: '/_dicom' // Customize the path
+  }
+})
+```
+
+Navigate to `/_dicom` in your browser to access the management interface.
+
+### Custom Layout
+
+Wrap the DICOM UI with a custom layout:
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+  dicom: {
+    route: true,
+    layout: 'admin'  // Use your 'admin' layout from layouts/admin.vue
+  }
+})
+```
+
+Or use a standalone page without any layout:
+
+```typescript
+export default defineNuxtConfig({
+  dicom: {
+    route: true,
+    layout: false  // No layout wrapper (default)
+  }
+})
+```
+
+### Use Component Directly
+
+Import and use the `DicomApp` component in your own pages or components:
+
+```vue
+<!-- pages/admin/dicom.vue -->
+<template>
+  <div>
+    <h1>DICOM Management</h1>
+    <DicomApp />
+  </div>
+</template>
+```
+
+The component is automatically registered as `DicomApp` and ready to use.
+
+### Custom Integration with Composables
+
+For more control, use the provided composables:
+
+```vue
+<!-- pages/custom-dicom.vue -->
+<script setup>
+import { ref } from 'vue'
+import { useLiveServiceLogs } from '#app'
+import { useLogLevel } from '#app'
+import { useServiceFiles } from '#app'
+
+const serviceName = ref('storeScp_1')
+const { logs, isConnected } = useLiveServiceLogs(serviceName)
+const { logLevel, setLogLevel } = useLogLevel(serviceName)
+const { files, deleteFile, cleanup } = useServiceFiles(serviceName)
+</script>
+
+<template>
+  <div class="dicom-admin">
+    <!-- Your custom UI here -->
+    <div class="logs">
+      <h2>Logs</h2>
+      <p>Status: {{ isConnected ? 'Connected' : 'Disconnected' }}</p>
+      <div v-for="log in logs" :key="log.id" class="log-entry">
+        {{ log.message }}
+      </div>
+    </div>
+
+    <div class="settings">
+      <h2>Log Level</h2>
+      <select :value="logLevel" @change="setLogLevel">
+        <option>debug</option>
+        <option>info</option>
+        <option>warn</option>
+        <option>error</option>
+      </select>
+    </div>
+
+    <div class="files">
+      <h2>Files</h2>
+      <button @click="cleanup(30)">Cleanup files older than 30 days</button>
+    </div>
+  </div>
+</template>
+```
+
 ## Configuration
 
 ### Service Options
