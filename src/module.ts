@@ -263,13 +263,16 @@ export default defineNuxtModule<ModuleOptions>({
 
     // Configure Nitro
     nuxt.hook('nitro:config', (nitroConfig) => {
-      // Add @nuxthealth/node-dicom to externals tracing
-      if (!nitroConfig.externals?.traceInclude) {
-        nitroConfig.externals = defu(nuxt.options.nitro.externals || {}, {
-          traceInclude: [],
-        })
+      // Externalize @nuxthealth/node-dicom and all platform-specific packages
+      // This prevents bundling and ensures native bindings work at runtime
+      nitroConfig.externals = nitroConfig.externals || {}
+      nitroConfig.externals.external = nitroConfig.externals.external || []
+
+      if (!Array.isArray(nitroConfig.externals.external)) {
+        nitroConfig.externals.external = [nitroConfig.externals.external]
       }
-      nitroConfig.externals.traceInclude?.push('node_modules/@nuxthealth/node-dicom/index.js')
+
+      nitroConfig.externals.external.push('@nuxthealth/node-dicom')
 
       // Enable WebSocket and database support
       nitroConfig.experimental = defu(nitroConfig.experimental, {
