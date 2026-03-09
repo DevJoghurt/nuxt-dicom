@@ -6,9 +6,11 @@
     >
       <UIcon
         name="i-lucide-zap-off"
-        class="w-12 h-12 mx-auto mb-3 opacity-50"
+        class="w-12 h-12 mx-auto mb-3 opacity-40"
       />
-      <p>No event handlers registered</p>
+      <p class="font-medium mb-1">
+        No event handlers registered
+      </p>
     </div>
 
     <div
@@ -18,88 +20,87 @@
       <div
         v-for="handler in enhancedHandlers"
         :key="handler.eventId"
-        class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-colors overflow-hidden"
+        class="group bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-primary-300 dark:hover:border-primary-700 transition-all duration-150"
       >
         <div class="p-4">
-          <!-- Header: Name + Event Badge -->
-          <div class="flex items-start justify-between gap-4 mb-3">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-3 mb-1">
-                <div
-                  class="flex items-center justify-center w-8 h-8 rounded bg-gradient-to-br"
-                  :class="eventTypeColors[handler.eventType as keyof typeof eventTypeColors]?.bgClass || 'from-gray-400 to-gray-500'"
-                >
-                  <UIcon
-                    :name="eventTypeIcons[handler.eventType as keyof typeof eventTypeIcons] || 'i-lucide-zap'"
-                    class="w-4 h-4 text-white"
-                  />
-                </div>
-                <div class="flex-1 min-w-0">
-                  <h3 class="font-semibold text-base truncate">
-                    {{ handler.name || 'Unnamed Handler' }}
-                  </h3>
-                </div>
+          <!-- Header row: icon + name + badges -->
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <!-- Event type icon -->
+              <div
+                class="flex items-center justify-center w-9 h-9 rounded-lg shrink-0"
+                :class="eventTypeStyle(handler.eventType).bg"
+              >
+                <UIcon
+                  :name="eventTypeStyle(handler.eventType).icon"
+                  class="w-4 h-4"
+                  :class="eventTypeStyle(handler.eventType).iconColor"
+                />
               </div>
-              <p
-                v-if="handler.description"
-                class="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2"
-              >
-                {{ handler.description }}
-              </p>
+              <!-- Name + event type label -->
+              <div class="min-w-0">
+                <h3 class="font-semibold text-sm truncate">
+                  {{ handler.name || 'Unnamed Handler' }}
+                </h3>
+                <p class="text-xs text-gray-400 dark:text-gray-500">
+                  {{ eventTypeLabels[handler.eventType] || handler.eventType }}
+                </p>
+              </div>
             </div>
-            <div class="shrink-0">
-              <UBadge
-                :color="handler.isUsed ? 'green' : 'gray'"
-                variant="soft"
-                size="sm"
-              >
-                {{ handler.isUsed ? 'In Use' : 'Unused' }}
-              </UBadge>
-            </div>
-          </div>
 
-          <!-- Event Type Badge -->
-          <div class="mb-3">
-            <UBadge
-              :color="eventTypeColors[handler.eventType as keyof typeof eventTypeColors]?.color || 'gray'"
-              variant="subtle"
-              size="sm"
-            >
-              {{ eventTypeLabels[handler.eventType as keyof typeof eventTypeLabels] || handler.eventType }}
-            </UBadge>
-          </div>
-
-          <!-- Services Using This Handler -->
-          <div
-            v-if="handler.isUsed && handler.servicesUsing.length > 0"
-            class="border-t border-gray-200 dark:border-gray-800 pt-3"
-          >
-            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-              Used by {{ handler.servicesUsing.length }} service(s):
-            </p>
-            <div class="flex flex-wrap gap-2">
+            <!-- Right badges -->
+            <div class="flex items-center gap-2 shrink-0">
               <UBadge
-                v-for="service in handler.servicesUsing"
-                :key="service.name"
-                color="blue"
+                :color="handler.isUsed ? 'success' : 'neutral'"
                 variant="subtle"
                 size="xs"
               >
-                <UIcon
-                  name="i-lucide-server"
-                  class="w-3 h-3 mr-1"
-                />
-                {{ service.name }}
+                {{ handler.isUsed ? 'In Use' : 'Unused' }}
+              </UBadge>
+              <UBadge
+                :color="eventTypeStyle(handler.eventType).badgeColor"
+                variant="soft"
+                size="xs"
+              >
+                {{ eventTypeLabels[handler.eventType] || handler.eventType }}
               </UBadge>
             </div>
           </div>
 
-          <!-- Handler Info Footer -->
-          <div class="border-t border-gray-200 dark:border-gray-800 mt-3 pt-3">
-            <p class="text-xs text-gray-500 dark:text-gray-400">
-              Event ID: <code class="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{{ handler.eventId }}</code>
-            </p>
+          <!-- Description -->
+          <p
+            v-if="handler.description"
+            class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-3"
+          >
+            {{ handler.description }}
+          </p>
+
+          <!-- Services using this handler -->
+          <div
+            v-if="handler.isUsed && handler.servicesUsing.length > 0"
+            class="flex items-center gap-2 flex-wrap"
+          >
+            <span class="text-xs text-gray-400 shrink-0">Used by:</span>
+            <UBadge
+              v-for="service in handler.servicesUsing"
+              :key="service.name"
+              color="info"
+              variant="subtle"
+              size="xs"
+            >
+              <UIcon
+                name="i-lucide-server"
+                class="w-3 h-3 mr-1"
+              />
+              {{ service.name }}
+            </UBadge>
           </div>
+        </div>
+
+        <!-- Footer: event ID -->
+        <div class="px-4 py-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between bg-gray-50 dark:bg-gray-900/50 rounded-b-lg">
+          <span class="text-xs text-gray-400 font-mono select-all">{{ handler.eventId }}</span>
+          <span class="text-xs text-gray-400">Event Handler</span>
         </div>
       </div>
     </div>
@@ -132,22 +133,52 @@ const props = defineProps<{
   services?: ServiceInfo[] | null
 }>()
 
-// Icon mapping for event types
-const eventTypeIcons: Record<string, string> = {
-  onBeforeStore: 'i-lucide-shield-check',
-  onFileStored: 'i-lucide-check-circle-2',
-  onStudyCompleted: 'i-lucide-flag-check',
-  onServerStarted: 'i-lucide-play-circle',
-  onError: 'i-lucide-alert-circle',
+type BadgeColor = 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
+
+type EventTypeStyle = { bg: string; icon: string; iconColor: string; badgeColor: BadgeColor }
+
+const eventTypeStyles: Record<string, EventTypeStyle> = {
+  onBeforeStore: {
+    bg: 'bg-primary-100 dark:bg-primary-900/40',
+    icon: 'i-lucide-shield-check',
+    iconColor: 'text-primary-600 dark:text-primary-400',
+    badgeColor: 'warning',
+  },
+  onFileStored: {
+    bg: 'bg-primary-100 dark:bg-primary-900/40',
+    icon: 'i-lucide-check-circle-2',
+    iconColor: 'text-primary-600 dark:text-primary-400',
+    badgeColor: 'success',
+  },
+  onStudyCompleted: {
+    bg: 'bg-primary-100 dark:bg-primary-900/40',
+    icon: 'i-lucide-check-circle',
+    iconColor: 'text-primary-600 dark:text-primary-400',
+    badgeColor: 'info',
+  },
+  onServerStarted: {
+    bg: 'bg-primary-100 dark:bg-primary-900/40',
+    icon: 'i-lucide-play-circle',
+    iconColor: 'text-primary-600 dark:text-primary-400',
+    badgeColor: 'primary',
+  },
+  onError: {
+    bg: 'bg-red-100 dark:bg-red-900/40',
+    icon: 'i-lucide-alert-circle',
+    iconColor: 'text-red-600 dark:text-red-400',
+    badgeColor: 'error',
+  },
 }
 
-// Color and label mapping for event types
-const eventTypeColors: Record<string, { color: string, bgClass: string }> = {
-  onBeforeStore: { color: 'amber', bgClass: 'from-amber-400 to-amber-600' },
-  onFileStored: { color: 'green', bgClass: 'from-green-400 to-green-600' },
-  onStudyCompleted: { color: 'blue', bgClass: 'from-blue-400 to-blue-600' },
-  onServerStarted: { color: 'purple', bgClass: 'from-purple-400 to-purple-600' },
-  onError: { color: 'red', bgClass: 'from-red-400 to-red-600' },
+const fallbackStyle: EventTypeStyle = {
+  bg: 'bg-gray-100 dark:bg-gray-800',
+  icon: 'i-lucide-zap',
+  iconColor: 'text-gray-500',
+  badgeColor: 'neutral',
+}
+
+function eventTypeStyle(eventType: string): EventTypeStyle {
+  return eventTypeStyles[eventType] ?? fallbackStyle
 }
 
 const eventTypeLabels: Record<string, string> = {

@@ -1,7 +1,7 @@
 import { StoreScp } from '@nuxthealth/node-dicom'
 import type { StoreScpConfig } from '../schema'
 import { DicomConfigSchemas } from '../schema'
-import type { OnBeforeStorePayload, OnFileStoredPayload, OnStudyCompletedPayload, OnServerStartedPayload, OnErrorPayload } from '../dicomEvents'
+import type { OnBeforeStorePayload, OnFileStoredPayload, OnStudyCompletedPayload, OnServerStartedPayload, OnErrorPayload, DicomEventContext } from '../dicomEvents'
 import { dicomEventEmitter } from '../dicomEvents'
 import { emitDicomEvent } from '../defineDicomEvent'
 import { dicomLogger } from '../logger'
@@ -32,6 +32,7 @@ export class StoreSCPServiceManager extends BaseServiceManager<StoreScp, StoreSc
       callingAeTitle: parsed.callingAETitle,
       outDir: parsed.outDir,
       maxPduLength: parsed.maxPduLength,
+      strict: parsed.strict,
       storageBackend: parsed.storageBackend,
       storeWithFileMeta: parsed.storeWithFileMeta,
       verbose: parsed.verbose,
@@ -153,43 +154,54 @@ export class StoreSCPServiceManager extends BaseServiceManager<StoreScp, StoreSc
     registerConfiguredHandlers(DICOM_EVENTS.storeScp_onError, 'onError')
 
     // OnBeforeStore - asynchronous callback for tag modification/validation
-    scp.onBeforeStore(async (error: Error | null, tags) => {
+    scp.onBeforeStore(async (error: Error | null, tagsJson: string) => {
+      const tags = JSON.parse(tagsJson) as Record<string, string>
       const payload: OnBeforeStorePayload = {
         serviceName,
         tags,
-        sopInstanceUid: tags.sopInstanceUid || '',
-        sopClassUid: tags.sopClassUid || '',
-        transferSyntaxUid: tags.transferSyntaxUid || '',
-        studyInstanceUid: tags.studyInstanceUid || '',
-        seriesInstanceUid: tags.seriesInstanceUid || '',
+        // These UIDs are available only when included in extractTags config
+        sopInstanceUid: tags['SOPInstanceUID'] || '',
+        sopClassUid: tags['SOPClassUID'] || '',
+        transferSyntaxUid: tags['TransferSyntaxUID'] || '',
+        studyInstanceUid: tags['StudyInstanceUID'] || '',
+        seriesInstanceUid: tags['SeriesInstanceUID'] || '',
       }
 
-      // Emit event synchronously and collect modified tags
-      // Note: This is synchronous, so we execute the handler directly
+      // Build an event context so handlers have access to the service logger
+      const context: DicomEventContext = {
+        serviceName,
+        logger: {
+          debug: (message, metadata) => dicomLogger.debug(serviceName, message, metadata),
+          info: (message, metadata) => dicomLogger.info(serviceName, message, metadata),
+          warn: (message, metadata) => dicomLogger.warn(serviceName, message, metadata),
+          error: (message, metadata) => dicomLogger.error(serviceName, message, metadata),
+        },
+      }
+
+      // Execute onBeforeStore handlers directly (synchronous path)
       const handlerNames = eventHandlers['onBeforeStore' as string] || []
-      let modifiedTags = tags
+      let modifiedTags: Record<string, string> = tags
 
       for (const handlerName of handlerNames) {
         const handler = dicomEventEmitter.getNamedHandler(handlerName)
         if (handler) {
           try {
-            // Call handler and potentially get modified tags
-            const result = handler(payload)
+            const result = handler(payload, context)
             if (result && typeof result === 'object' && 'tags' in result) {
               modifiedTags = (result as { tags: Record<string, string> }).tags
             }
           }
-          catch (error) {
+          catch (err) {
             console.error(
               `[nuxt-dicom] Error in onBeforeStore handler "${handlerName}":`,
-              error,
+              err,
             )
-            throw error // Re-throw to prevent file storage
+            throw err // Re-throw to prevent file storage
           }
         }
       }
 
-      return modifiedTags
+      return JSON.stringify(modifiedTags)
     })
 
     // OnServerStarted

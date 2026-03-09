@@ -2,8 +2,8 @@ import { defineNuxtModule, createResolver, addServerScanDir, addComponent, addCo
 import { join } from 'node:path'
 import { readFileSync } from 'node:fs'
 import defu from 'defu'
-import type { StoreScpConfig, StoreScpConfigInput } from './runtime/utils/schema'
-import { DicomConfigSchemas } from './runtime/utils/schema'
+import type { StoreScpConfig, ServiceConfigInput, ExternalDicomDestination, DicomStorageConfig, DicomStorageConfigInput } from './runtime/utils/schema'
+import { DicomConfigSchemas, ExternalDicomDestinationSchema, ServiceConfigSchema } from './runtime/utils/schema'
 import { scanDicomEventHandlers, generateHandlersTemplate } from './utils/scanDicomHandlers'
 import { watchDicomHandlers } from './utils/dev'
 
@@ -41,14 +41,32 @@ export interface ModuleOptions {
    */
   serviceLogs?: Record<string, 'debug' | 'info' | 'warn' | 'error'>
   /**
-   * Automatically delete files older than specified days
-   * Set to 0 to disable auto-deletion
-   * @default 0
+   * Named storage backends.
+   * Each key becomes the storage name referenced by `storageKey` on a service.
+   *
+   * @example
+   * ```ts
+   * storages: {
+   *   main: { storageBackend: 'Filesystem', outDir: 'dicom-storage', autoDeleteAfterDays: 30 },
+   *   archive: { storageBackend: 'S3', s3Config: { ... } },
+   * }
+   * ```
    */
-  autoDeleteAfterDays?: number
-  services?: {
-    storeScp?: StoreScpConfigInput | StoreScpConfigInput[]
-  }
+  storages?: Record<string, DicomStorageConfigInput>
+  /**
+   * All DICOM services — internal StoreSCP servers and external send targets.
+   * Each entry must have a `kind` field: `'storeScp'`, `'dimse'`, or `'dicomweb'`.
+   *
+   * @example
+   * ```ts
+   * services: [
+   *   { kind: 'storeScp', name: 'receiver', storageKey: 'main', port: 4446 },
+   *   { kind: 'dimse', name: 'pacs', addr: 'PACS@192.168.1.10:104' },
+   *   { kind: 'dicomweb', name: 'orthanc', url: 'http://orthanc:8042/dicom-web' },
+   * ]
+   * ```
+   */
+  services?: ServiceConfigInput[]
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -64,9 +82,8 @@ export default defineNuxtModule<ModuleOptions>({
     layout: false,
     logLevel: 'info',
     serviceLogs: {},
-    services: {
-      storeScp: undefined,
-    },
+    storages: {},
+    services: [],
   },
   moduleDependencies: {
     '@nhealth/nutils': {},
@@ -78,6 +95,9 @@ export default defineNuxtModule<ModuleOptions>({
     addServerImports([{
       from: resolver.resolve('./runtime/utils/services'),
       name: 'storeSCPServiceManager',
+    }, {
+      from: resolver.resolve('./runtime/utils/storeSCUJobManager'),
+      name: 'storeSCUJobManager',
     }, {
       from: resolver.resolve('./runtime/utils/serviceRegistry'),
       name: 'dicomServiceRegistry',
@@ -129,6 +149,11 @@ export default defineNuxtModule<ModuleOptions>({
     addImports({
       name: 'useServiceFiles',
       from: resolver.resolve('./runtime/app/composables/useServiceFiles'),
+    })
+
+    addImports({
+      name: 'useStorageFiles',
+      from: resolver.resolve('./runtime/app/composables/useStorageFiles'),
     })
 
     // Add route if enabled
@@ -206,48 +231,91 @@ export default defineNuxtModule<ModuleOptions>({
 
     const runtimeConfig = nuxt.options.runtimeConfig
 
-    // Process services from config - convert single or array to normalized array with validation
-    const processServices = (services: unknown): StoreScpConfig[] => {
-      if (!services) return []
+    // Process services from config — unified array with discriminated kind
+    const processServices = (services: ServiceConfigInput[] = []) => {
+      const storeScp: StoreScpConfig[] = []
+      const external: ExternalDicomDestination[] = []
+      let storeSCPIndex = 0
 
-      const serviceArray = Array.isArray(services) ? services : [services as StoreScpConfig]
+      for (const [idx, entry] of services.entries()) {
+        const parsed = ServiceConfigSchema.safeParse(entry)
+        if (!parsed.success) {
+          console.warn(`[nuxt-dicom] Invalid service config at index ${idx}:`, parsed.error.issues)
+          continue
+        }
+        const data = parsed.data
+        if (data.kind === 'storeScp') {
+          storeSCPIndex++
+          if (!data.name) data.name = `storeScp_${storeSCPIndex}`
+          const { s3Config, kind: _kind, ...serviceData } = data
+          storeScp.push(s3Config ? { ...serviceData, s3Config } : serviceData as StoreScpConfig)
+        }
+        else {
+          const { kind: _kind, ...destData } = data
+          external.push(destData as ExternalDicomDestination)
+        }
+      }
 
-      return serviceArray
-        .map((config, idx) => {
-          // Validate config using Zod schema
-          const validated = DicomConfigSchemas.storeSCP.safeParse(config)
-
-          if (!validated.success) {
-            console.warn(
-              `[nuxt-dicom] Invalid StoreSCP configuration at index ${idx}:`,
-              validated.error.issues,
-            )
-            return null
-          }
-
-          // Generate name if not provided
-          if (!validated.data.name) {
-            validated.data.name = `storeScp_${idx + 1}`
-          }
-
-          return validated.data
-        })
-        .filter((config): config is StoreScpConfig => config !== null)
+      return { storeScp, external }
     }
 
-    const registeredServices = processServices(options.services?.storeScp)
+    const { storeScp: registeredServices, external: registeredDestinations } = processServices(options.services)
+
+    // Validate and normalise named storage configs
+    const processStorages = (storages: Record<string, DicomStorageConfigInput> = {}): DicomStorageConfig[] => {
+      return Object.entries(storages)
+        .map(([name, config]) => {
+          const parsed = DicomConfigSchemas.dicomStorage.safeParse(config)
+          if (!parsed.success) {
+            console.warn(`[nuxt-dicom] Invalid storage config "${name}":`, parsed.error.issues)
+            return null
+          }
+          return { ...parsed.data, name }
+        })
+        .filter((s): s is DicomStorageConfig => s !== null)
+    }
+
+    const registeredStorages = processStorages(options.storages)
+
+    // Merge storage config fields into each service that declares a storageKey
+    const resolvedServices = registeredServices.map((service) => {
+      if (!service.storageKey) {
+        console.warn(`[nuxt-dicom] Service "${service.name}" has no storageKey — using schema defaults for storage`)
+        return service
+      }
+      const storage = registeredStorages.find(s => s.name === service.storageKey)
+      if (!storage) {
+        console.warn(`[nuxt-dicom] Service "${service.name}" references unknown storage "${service.storageKey}"`)
+        return service
+      }
+      console.log(`[nuxt-dicom] Merged storage "${storage.name}" into service "${service.name}"`)
+      return {
+        ...service,
+        outDir: storage.outDir,
+        storageBackend: storage.storageBackend,
+        // Service-level value takes precedence over the storage default
+        storeWithFileMeta: service.storeWithFileMeta ?? storage.storeWithFileMeta,
+        autoDeleteAfterDays: storage.autoDeleteAfterDays,
+        ...(storage.s3Config && { s3Config: storage.s3Config }),
+      }
+    })
 
     // Log registered services
-    for (const service of registeredServices) {
+    for (const service of resolvedServices) {
       console.log(`[nuxt-dicom] registered service: ${service.name} (port: ${service.port})`)
+    }
+
+    for (const dest of registeredDestinations) {
+      console.log(`[nuxt-dicom] registered external service: ${dest.name} (${dest.protocol})`)
     }
 
     // Add to runtime config - simple list of configured services
     runtimeConfig.dicom = defu(runtimeConfig?.dicom || {}, {
       logLevel: options.logLevel,
       serviceLogs: options.serviceLogs,
-      autoDeleteAfterDays: options.autoDeleteAfterDays || 0,
-      services: registeredServices,
+      services: resolvedServices,
+      storages: registeredStorages,
+      destinations: registeredDestinations,
       handlers: scannedHandlers.map(handler => ({
         serviceName: handler.serviceName,
         eventType: handler.eventType,

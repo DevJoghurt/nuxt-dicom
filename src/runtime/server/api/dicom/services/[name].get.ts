@@ -46,6 +46,7 @@ export default defineEventHandler(async (event) => {
       autoStart: config.autoStart,
       maxPduLength: config.maxPduLength,
       storageBackend: config.storageBackend,
+      storageKey: config.storageKey,
       storeWithFileMeta: config.storeWithFileMeta,
       verbose: config.verbose,
       studyTimeout: config.studyTimeout,

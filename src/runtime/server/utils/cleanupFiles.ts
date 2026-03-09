@@ -1,4 +1,4 @@
-import { useStorage, dicomServiceRegistry } from '#imports'
+import { useStorage, useRuntimeConfig, dicomServiceRegistry } from '#imports'
 
 export interface CleanupResult {
   serviceName: string
@@ -65,16 +65,23 @@ export async function cleanupOldFiles(
 }
 
 /**
- * Cleanup old files for all services
+ * Cleanup old files for all services that have autoDeleteAfterDays configured.
+ * Each service resolves its retention period from its merged storage config.
  */
-export async function cleanupAllServices(days: number): Promise<CleanupResult[]> {
+export async function cleanupAllServices(): Promise<CleanupResult[]> {
+  const config = useRuntimeConfig()
+  const serviceConfigs = (config.dicom?.services as Array<{ name?: string, autoDeleteAfterDays?: number }>) || []
   const services = dicomServiceRegistry.getAllServices()
 
   const results: CleanupResult[] = []
 
   for (const service of services) {
-    const result = await cleanupOldFiles(service.name, days)
-    results.push(result)
+    const serviceConfig = serviceConfigs.find(s => s.name === service.name)
+    const days = serviceConfig?.autoDeleteAfterDays ?? 0
+    if (days > 0) {
+      const result = await cleanupOldFiles(service.name, days)
+      results.push(result)
+    }
   }
 
   return results

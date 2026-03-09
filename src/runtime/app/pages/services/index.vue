@@ -3,86 +3,70 @@
     <!-- Header -->
     <div class="border-b border-gray-200 dark:border-gray-800 px-6 py-3 shrink-0">
       <div class="flex items-center justify-between">
-        <div class="flex items-center gap-4">
-          <h1 class="text-lg font-semibold">
-            DICOM Services
-          </h1>
-        </div>
-        <div class="flex items-center gap-3">
-          <UButton
-            icon="i-lucide-plus"
-            label="New Service"
-            color="primary"
-            size="sm"
-            @click="handleNewService"
-          />
-        </div>
+        <h1 class="text-lg font-semibold">
+          Services
+        </h1>
+        <UButton
+          icon="i-lucide-plus"
+          label="New Service"
+          color="primary"
+          size="sm"
+          @click="handleNewService"
+        />
       </div>
     </div>
 
     <!-- Main Content -->
     <div class="flex-1 min-h-0 overflow-y-auto">
-      <div class="max-w-7xl mx-auto p-6">
+      <div class="px-4 py-6">
         <!-- Stats Overview -->
         <div
           v-if="stats"
-          class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+          class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"
         >
           <NUtilsStatCard
             icon="i-lucide-server"
-            :value="stats.total"
-            label="Total Services"
+            :value="stats.internal"
+            label="Internal"
             variant="gray"
           />
           <NUtilsStatCard
             icon="i-lucide-check-circle"
             :value="stats.running"
-            label="Running Services"
-            variant="success"
+            label="Running"
+            variant="gray"
+          />
+          <NUtilsStatCard
+            icon="i-lucide-send"
+            :value="stats.external"
+            label="External"
+            variant="gray"
           />
           <NUtilsStatCard
             icon="i-lucide-zap"
             :value="stats.registeredHandlers"
-            label="Registered Handlers"
-            variant="primary"
-          />
-          <NUtilsStatCard
-            icon="i-lucide-plug"
-            :value="stats.usedHandlers"
-            label="Used Handlers"
-            variant="info"
+            label="Handlers"
+            variant="gray"
           />
         </div>
 
-        <!-- Tabs - Left Aligned, Smaller Size with Full Width Bottom Border -->
-        <div class="mb-6">
-          <UTabs
-            v-model="activeTab"
-            :items="tabs"
+        <!-- Filter toolbar -->
+        <div class="mb-5">
+          <UInput
+            v-model="filter"
+            icon="i-lucide-search"
+            placeholder="Filter services…"
             size="sm"
-            variant="link"
-            :ui="{ root: 'w-full', list: 'w-full border-b', trigger: 'justify-start' }"
-            :default-value="'services'"
+            class="w-64"
           />
         </div>
 
-        <!-- Tab Content -->
-        <div class="space-y-6">
-          <!-- Services Tab -->
-          <ServiceItem
-            v-if="activeTab === 'services'"
-            :services="services"
-            @start-service="handleStartService"
-            @stop-service="handleStopService"
-          />
-
-          <!-- Event Handlers Tab -->
-          <EventHandlerItem
-            v-if="activeTab === 'handlers'"
-            :handlers="handlers"
-            :services="services"
-          />
-        </div>
+        <!-- Services list -->
+        <ServiceItem
+          :services="filteredServices"
+          @start-service="handleStartService"
+          @stop-service="handleStopService"
+        />
       </div>
     </div>
   </div>
@@ -90,74 +74,65 @@
 
 <script setup lang="ts">
 import { useComponentRouter, ref, computed, onMounted, useFetch } from '#imports'
-import ServiceItem from '../../components/ServiceItem.vue'
-import EventHandlerItem from '../../components/EventHandlerItem.vue'
+import ServiceItem from '../../components/service/Item.vue'
+import type { UnifiedServiceInfo } from '../../components/service/Item.vue'
 
 const componentRouter = useComponentRouter()
-const activeTab = ref('services')
+const filter = ref('')
 
-// Transform function for services
-const transformServices = (data: unknown): Array<{
-  name: string
-  status: 'running' | 'stopped'
-  port: number
-  callingAETitle: string
-  fileCount: number
-  eventCount: number
-  lastActivityAt?: string
-  isRunning: boolean
-  eventHandlers: Record<string, string[]>
-}> => {
+const transformServices = (data: unknown): UnifiedServiceInfo[] => {
   const arr = Array.isArray(data) ? data : []
-  return arr.map(s => ({
-    name: String((s as Record<string, unknown>).name || ''),
-    status: ((s as Record<string, unknown>).status as 'running' | 'stopped') || 'stopped',
-    port: Number((s as Record<string, unknown>).port || 0),
-    callingAETitle: String((s as Record<string, unknown>).callingAETitle || 'STORESCP'),
-    fileCount: Number((s as Record<string, unknown>).fileCount || 0),
-    eventCount: Number((s as Record<string, unknown>).eventCount || 0),
-    lastActivityAt: (s as Record<string, unknown>).lastActivityAt as string | undefined,
-    isRunning: Boolean((s as Record<string, unknown>).isRunning),
-    eventHandlers: ((s as Record<string, unknown>).eventHandlers as Record<string, string[]>) || {},
-  }))
+  return arr.map((s) => {
+    const obj = s as Record<string, unknown>
+    if (obj.kind === 'external') {
+      return {
+        kind: 'external' as const,
+        name: String(obj.name || ''),
+        label: String(obj.label || obj.name || ''),
+        protocol: (obj.protocol as 'dimse' | 'dicomweb') || 'dimse',
+        addr: String(obj.addr || ''),
+        calledAeTitle: obj.calledAeTitle as string | undefined,
+        callingAeTitle: obj.callingAeTitle as string | undefined,
+        description: obj.description as string | undefined,
+      }
+    }
+    return {
+      kind: 'storeScp' as const,
+      name: String(obj.name || ''),
+      isRunning: Boolean(obj.isRunning),
+      port: Number(obj.port || 0),
+      callingAETitle: String(obj.callingAETitle || 'STORESCP'),
+      eventHandlers: (obj.eventHandlers as Record<string, string[]>) || {},
+    }
+  })
 }
 
-// Transform function for handlers
-const transformHandlers = (data: unknown): Array<{
-  serviceName: string
-  eventType: string
-  eventId: string
-  name: string
-  description: string
-}> => {
-  const response = (typeof data === 'object' && data !== null) ? (data as Record<string, unknown>) : {}
-  const handlers = Array.isArray(response.handlers) ? response.handlers : []
-  return handlers.map(h => ({
-    serviceName: String((h as Record<string, unknown>).serviceName || ''),
-    eventType: String((h as Record<string, unknown>).eventType || ''),
-    eventId: String((h as Record<string, unknown>).eventId || ''),
-    name: String((h as Record<string, unknown>).name || ''),
-    description: String((h as Record<string, unknown>).description || ''),
-  }))
-}
-
-// Fetch services using useFetch with transform and default
 const { data: services, refresh: refreshServices } = await useFetch('/api/dicom/services', {
   transform: transformServices,
-  default: () => [],
+  default: (): UnifiedServiceInfo[] => [],
 })
 
-// Fetch handlers using useFetch with transform and default
 const { data: handlers } = await useFetch('/api/dicom/handlers', {
-  transform: transformHandlers,
+  transform: (data: unknown) => {
+    const response = (typeof data === 'object' && data !== null) ? (data as Record<string, unknown>) : {}
+    return Array.isArray(response.handlers) ? response.handlers : []
+  },
   default: () => [],
 })
 
-// Handle start service with refresh
+const filteredServices = computed(() => {
+  const q = filter.value.toLowerCase()
+  return (services.value || []).filter((s) => {
+    if (!q) return true
+    if (s.name.toLowerCase().includes(q)) return true
+    if (s.kind === 'external' && s.label.toLowerCase().includes(q)) return true
+    return false
+  })
+})
+
 async function handleStartService(serviceName: string) {
   try {
     await $fetch(`/api/dicom/services/${serviceName}/start`, { method: 'POST' })
-    // Wait a brief moment for the service to start, then refresh
     await new Promise(resolve => setTimeout(resolve, 500))
     await refreshServices()
   }
@@ -166,11 +141,9 @@ async function handleStartService(serviceName: string) {
   }
 }
 
-// Handle stop service with refresh
 async function handleStopService(serviceName: string) {
   try {
     await $fetch(`/api/dicom/services/${serviceName}/stop`, { method: 'POST' })
-    // Wait a brief moment for the service to stop, then refresh
     await new Promise(resolve => setTimeout(resolve, 500))
     await refreshServices()
   }
@@ -179,55 +152,25 @@ async function handleStopService(serviceName: string) {
   }
 }
 
-// Navigate to create new service
 function handleNewService() {
   componentRouter.push('/services/new')
 }
 
-// Computed stats with live updates
 const stats = computed(() => {
-  const servicesList = services.value || []
-
-  // Count running services using isRunning flag
-  const runningCount = servicesList.filter((s: { isRunning?: boolean }) => s.isRunning === true).length
-
-  // Calculate total event handlers used across all services
-  const usedHandlers = new Set<string>()
-  servicesList.forEach((s: { eventHandlers?: Record<string, unknown> }) => {
-    if (s.eventHandlers) {
-      Object.values(s.eventHandlers).forEach((handlers: unknown) => {
-        if (Array.isArray(handlers)) {
-          handlers.forEach((h: string) => usedHandlers.add(h))
-        }
-      })
-    }
-  })
-
+  const list = services.value || []
+  const internal = list.filter(s => s.kind === 'storeScp')
+  const runningCount = internal.filter(s => s.kind === 'storeScp' && s.isRunning).length
   return {
-    total: servicesList.length,
+    internal: internal.length,
     running: runningCount,
+    external: list.filter(s => s.kind === 'external').length,
     registeredHandlers: handlers.value?.length || 0,
-    usedHandlers: usedHandlers.size,
   }
 })
 
-// Tabs configuration with dynamic counts
-const tabs = computed(() => [
-  {
-    label: 'Services',
-    icon: 'i-lucide-server',
-    value: 'services',
-  },
-  {
-    label: `Event Handlers (${handlers.value?.length || 0})`,
-    icon: 'i-lucide-zap',
-    value: 'handlers',
-  },
-])
-
-// Refresh services on mount and set interval
-onMounted(async () => {
-  // Refresh every 5 seconds
+onMounted(() => {
   setInterval(() => refreshServices(), 5000)
 })
 </script>
+
+

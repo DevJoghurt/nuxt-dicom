@@ -5,7 +5,21 @@
     base="p"
     mode="query"
   >
-    <component :is="component" />
+    <NUtilsComponentShell
+      orientation="horizontal"
+      :items="navigationItems"
+    >
+      <template #leading>
+        <div class="px-4 py-3 border-gray-200 dark:border-gray-800 flex items-center gap-2.5">
+          <div class="flex items-center justify-center w-7 h-7 rounded-lg bg-primary-100 dark:bg-primary-900/40 shrink-0">
+            <UIcon name="i-lucide-scan-line" class="w-4 h-4 text-primary-600 dark:text-primary-400" />
+          </div>
+          <span class="text-sm font-semibold tracking-tight">DICOM</span>
+        </div>
+      </template>
+
+      <component :is="component" />
+    </NUtilsComponentShell>
   </NUtilsComponentRouter>
 
   <!-- Confirm Modal from nutils -->
@@ -13,10 +27,32 @@
 </template>
 
 <script setup lang="ts">
-// Define routes for component-based routing
 const routes = {
   '/services': () => import('./services/index.vue'),
   '/services/new': () => import('./services/new.vue'),
   '/services/:name': () => import('./services/[name].vue'),
+  '/handlers': () => import('./handlers/index.vue'),
+  '/storages': () => import('./storages/index.vue'),
+  '/storages/:name': () => import('./storages/[name].vue'),
 }
+
+const navigationItems = [
+  [
+    {
+      label: 'Services',
+      path: '/services',
+      icon: 'i-lucide-server',
+    },
+    {
+      label: 'Event Handlers',
+      path: '/handlers',
+      icon: 'i-lucide-zap',
+    },
+    {
+      label: 'Storages',
+      path: '/storages',
+      icon: 'i-lucide-database',
+    },
+  ],
+]
 </script>

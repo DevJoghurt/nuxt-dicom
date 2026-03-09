@@ -15,19 +15,25 @@ export default defineNuxtConfig({
     route: true,
     // Global log level (can be overridden per-service or at runtime)
     logLevel: 'info',
-    // Per-service log level overrides (optional)
-    // serviceLogs: {
-    //   storeScp_1: 'debug',
-    // },
-    autoDeleteAfterDays: 10,
-    services: {
-      storeScp: {
+    // Named storage backends — referenced by services via storageKey
+    storages: {
+      main: {
+        storageBackend: 'Filesystem',
+        outDir: 'dicom-storage',
+        autoDeleteAfterDays: 10,
+      },
+    },
+    services: [
+      {
+        kind: 'storeScp',
+        storageKey: 'main',
+        storeWithFileMeta: true,
         eventHandlers: {
           onFileStored: ['logFileStorage'],
           onServerStarted: ['onServerReady'],
           onStudyCompleted: ['handleStudyCompletion'],
         },
-      },
-    },
+      }
+    ],
   },
 })
