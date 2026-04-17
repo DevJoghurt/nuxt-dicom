@@ -18,6 +18,12 @@
         </div>
       </template>
 
+      <template #trailing>
+        <div class="mt-auto px-3 py-3 border-t border-gray-200 dark:border-gray-800">
+          <DicomJobsTasksButton />
+        </div>
+      </template>
+
       <component :is="component" />
     </NUtilsComponentShell>
   </NUtilsComponentRouter>
@@ -27,6 +33,8 @@
 </template>
 
 <script setup lang="ts">
+import DicomJobsTasksButton from '../components/jobs/TasksButton.vue'
+
 const routes = {
   '/services': () => import('./services/index.vue'),
   '/services/new': () => import('./services/new.vue'),
@@ -34,6 +42,8 @@ const routes = {
   '/handlers': () => import('./handlers/index.vue'),
   '/storages': () => import('./storages/index.vue'),
   '/storages/:name': () => import('./storages/[name].vue'),
+  '/pacs': () => import('./pacs/index.vue'),
+  '/pacs/:name': () => import('./pacs/[name].vue'),
 }
 
 const navigationItems = [
@@ -52,6 +62,11 @@ const navigationItems = [
       label: 'Storages',
       path: '/storages',
       icon: 'i-lucide-database',
+    },
+    {
+      label: 'PACS',
+      path: '/pacs',
+      icon: 'i-lucide-search',
     },
   ],
 ]

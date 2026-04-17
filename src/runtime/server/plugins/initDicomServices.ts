@@ -21,6 +21,32 @@ export default defineNitroPlugin((nitro) => {
   }
   g.__dicomInitialized = true
 
+  // Register shutdown hook immediately (synchronously) so it is always called,
+  // regardless of whether service initialization has completed yet.
+  nitro.hooks.hook('close', async () => {
+    console.log('[nuxt-dicom] Closing DICOM services...')
+
+    // Stop all running services tracked by the manager (covers services started
+    // both from config and dynamically via the API).
+    const running = storeSCPServiceManager.getRunningServices()
+    for (const serviceName of running.reverse()) {
+      try {
+        await storeSCPServiceManager.stopService(serviceName)
+        console.log(`✓ Stopped StoreSCP service: ${serviceName}`)
+      }
+      catch (error) {
+        console.error(
+          `Error stopping StoreSCP service "${serviceName}":`,
+          error,
+        )
+      }
+    }
+
+    // Clear registry
+    dicomServiceRegistry.clear()
+    console.log('[nuxt-dicom] DICOM services closed')
+  })
+
   console.log('[nuxt-dicom] Initializing DICOM services...')
 
   // Run initialization asynchronously to not block Nitro startup
@@ -65,9 +91,6 @@ export default defineNitroPlugin((nitro) => {
         console.log(`[nuxt-dicom] Registered service: ${serviceId}`)
       })
 
-      // Track started services for cleanup
-      const startedServices: string[] = []
-
       // Initialize StoreSCP services - create and optionally start
       for (const serviceConfig of services) {
         if (!serviceConfig || !serviceConfig.port) continue
@@ -87,7 +110,6 @@ export default defineNitroPlugin((nitro) => {
           if (serviceConfig.autoStart !== false) {
             console.log(`[nuxt-dicom] Starting StoreSCP service: ${serviceName}`)
             await storeSCPServiceManager.startService(serviceName)
-            startedServices.push(serviceName)
             console.log(`✓ Started StoreSCP service: ${serviceName}`)
           }
         }
@@ -99,29 +121,6 @@ export default defineNitroPlugin((nitro) => {
           console.error('Error details:', error)
         }
       }
-
-      // Register graceful shutdown hook
-      nitro.hooks.hook('close', async () => {
-        console.log('[nuxt-dicom] Closing DICOM services...')
-
-        // Stop all started services in reverse order
-        for (const serviceName of startedServices.reverse()) {
-          try {
-            await storeSCPServiceManager.stopService(serviceName)
-            console.log(`✓ Stopped StoreSCP service: ${serviceName}`)
-          }
-          catch (error) {
-            console.error(
-              `Error stopping StoreSCP service "${serviceName}":`,
-              error,
-            )
-          }
-        }
-
-        // Clear registry
-        dicomServiceRegistry.clear()
-        console.log('[nuxt-dicom] DICOM services closed')
-      })
     }
     catch (error) {
       console.error('Failed to initialize DICOM services:', error)

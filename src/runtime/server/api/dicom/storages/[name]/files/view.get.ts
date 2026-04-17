@@ -1,6 +1,8 @@
 import { defineEventHandler, getRouterParam, createError, getQuery, useStorage, getStorageByName } from '#imports'
 import { DicomFile, getCommonTagSets } from '@nuxthealth/node-dicom'
 import type { StorageConfig } from '@nuxthealth/node-dicom'
+import { resolve } from 'node:path'
+import { homedir } from 'node:os'
 
 const TEXT_EXTENSIONS = new Set(['.txt', '.log', '.json', '.xml', '.csv', '.yaml', '.yml', '.md', '.ini', '.cfg'])
 
@@ -12,13 +14,10 @@ const TEXT_EXTENSIONS = new Set(['.txt', '.log', '.json', '.xml', '.csv', '.yaml
  *
  * Response: { type: 'dicom'|'text'|'unsupported', fileName, size?, tags?, content? }
  *
- * TODO(node-dicom): DicomFile.open() in v0.2.1 does not yet handle DICOM files
- * that were stored without a Part-10 preamble (dataset-only files received via
- * DIMSE/StoreScp). The docs say both formats are supported, but in practice the
- * library throws "Could not parse meta group data set" for such files.
- * Once DicomFile handles implicit-VR / meta-less datasets natively, this works
- * for all files. Until then, meta-less files will return a 500 with that message.
- * → Please add preamble auto-detection / implicit-VR fallback to DicomFile.open().
+ * Note: DicomFile.open() should natively handle dataset-only files (stored without
+ * Part-10 preamble via DIMSE with storeWithFileMeta: false) per the v0.3 docs, but
+ * the published package still throws for such files. We return a graceful parseError
+ * response until the fix ships.
  */
 export default defineEventHandler(async (event) => {
   const storageName = getRouterParam(event, 'name')
@@ -44,10 +43,14 @@ export default defineEventHandler(async (event) => {
     // unstorage uses ':' as path-segment separator; DicomFile expects '/'
     const filePath = key.replace(/:/g, '/')
 
+    const resolvedOutDir = storageInfo.outDir.startsWith('~/')
+      ? resolve(homedir(), storageInfo.outDir.slice(2))
+      : resolve(storageInfo.outDir)
+
     const dicomStorageConfig =
       storageInfo.storageBackend === 'S3'
         ? null // S3 not yet wired; fall through to error below
-        : { backend: 'Filesystem', rootDir: storageInfo.outDir } as StorageConfig
+        : { backend: 'Filesystem', rootDir: resolvedOutDir } as StorageConfig
 
     if (!dicomStorageConfig) {
       throw createError({ statusCode: 501, message: 'S3 backend not yet supported for file preview' })
@@ -70,18 +73,38 @@ export default defineEventHandler(async (event) => {
       else if (modality === 'XA' || modality === 'RF') modalityTags = dicomFile.extract(tagSets.xa as Parameters<typeof dicomFile.extract>[0])
       else if (modality === 'RTIMAGE' || modality === 'RTPLAN' || modality === 'RTDOSE') modalityTags = dicomFile.extract(tagSets.rt as Parameters<typeof dicomFile.extract>[0])
 
+      // Detect whether there is any renderable pixel / document content.
+      // This drives the "View pixel data" button visibility for all cases,
+      // including encapsulated text/PDF (which have no Rows/Columns tags).
+      let hasRenderable = false
+      try {
+        dicomFile.getTagInfo('PixelData')
+        hasRenderable = true
+      }
+      catch {
+        try { dicomFile.getEncapsulatedDocument(); hasRenderable = true }
+        catch { /* nothing renderable */ }
+      }
+
       return {
         type: 'dicom' as const,
         fileName,
         tags: { ...baseTags, ...modalityTags } as Record<string, string>,
+        hasRenderable,
       }
     }
     catch (err) {
       if (err && typeof err === 'object' && 'statusCode' in err) throw err
-      throw createError({
-        statusCode: 500,
-        message: `Failed to parse DICOM file: ${err instanceof Error ? err.message : 'Unknown error'}`,
-      })
+      // Most likely cause: file stored via DIMSE without a Part-10 preamble
+      // (storeWithFileMeta: false). Return a graceful response so the UI can
+      // still display the file name and show an informative message.
+      return {
+        type: 'dicom' as const,
+        fileName,
+        tags: {} as Record<string, string>,
+        hasRenderable: false,
+        parseError: err instanceof Error ? err.message : 'Unknown DICOM parse error',
+      }
     }
     finally {
       dicomFile.close()

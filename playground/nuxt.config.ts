@@ -11,6 +11,14 @@ export default defineNuxtConfig({
     enabled: true,
   },
   css: ['~/assets/tailwind.css'],
+  vite: {
+    optimizeDeps: {
+      include: [
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+      ]
+    }
+  },
   dicom: {
     route: true,
     // Global log level (can be overridden per-service or at runtime)
@@ -33,6 +41,13 @@ export default defineNuxtConfig({
           onServerStarted: ['onServerReady'],
           onStudyCompleted: ['handleStudyCompletion'],
         },
+      }
+    ],
+    pacs: [
+      {
+        name: 'orthanc-local',
+        addr: '127.0.0.1:4242',
+        calledAeTitle: 'ORTHANC',
       }
     ],
   },

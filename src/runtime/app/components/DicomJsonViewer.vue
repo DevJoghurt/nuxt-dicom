@@ -31,7 +31,7 @@
             </UBadge>
           </div>
         </div>
-        <!-- File info -->
+        <!-- File info + optional action slot -->
         <div class="text-right shrink-0">
           <p class="text-xs text-gray-400 font-mono truncate max-w-36">
             {{ fileName }}
@@ -39,6 +39,7 @@
           <p class="text-xs text-gray-400 mt-0.5">
             {{ formatSize(size) }}
           </p>
+          <slot name="actions" />
         </div>
       </div>
     </div>

@@ -63,6 +63,7 @@
         :depth="0"
         :browser="browser"
         :on-view-file="onViewFile"
+        :source-name="sourceName"
       />
     </div>
   </div>
@@ -75,6 +76,7 @@ import BrowserNode from './BrowserNode.vue'
 
 const props = defineProps<{
   storageName: string
+  sourceName?: string
   onViewFile?: (key: string, name: string) => void
 }>()
 

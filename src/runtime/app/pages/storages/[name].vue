@@ -64,6 +64,7 @@
       <div class="flex-[2] min-h-0 flex flex-col border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-800">
         <StorageBrowser
           :storage-name="storageName"
+          :source-name="storage.usedBy[0]"
           :on-view-file="openFileTab"
         />
       </div>
@@ -71,10 +72,16 @@
       <!-- Right: Tab panel (1/3) -->
       <div class="flex-[1] min-h-0 flex flex-col overflow-hidden">
         <!-- Tab bar -->
-        <div class="shrink-0 h-9 flex items-stretch overflow-x-auto border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/60 scrollbar-hide">
+        <div
+          ref="tabBarEl"
+          class="shrink-0 h-9 flex items-stretch overflow-hidden border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/60"
+        >
+          <!-- Visible tabs -->
           <button
-            v-for="tab in tabs"
+            v-for="(tab, i) in tabs"
+            v-show="i < overflowStartIdx"
             :key="tab.id"
+            data-tab-btn
             class="group relative flex items-center gap-1.5 px-3 text-xs font-medium whitespace-nowrap shrink-0 border-b-2 transition-colors focus:outline-none"
             :class="activeTabId === tab.id
               ? 'border-primary-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900'
@@ -94,6 +101,55 @@
               <UIcon name="i-lucide-x" class="w-3 h-3" />
             </span>
           </button>
+
+          <!-- Overflow "⋯" popover -->
+          <UPopover
+            v-if="overflowStartIdx < tabs.length"
+            v-model:open="overflowOpen"
+            :content="{ side: 'bottom', align: 'end', sideOffset: 1 }"
+            :ui="{ content: 'p-0 min-w-52 rounded-t-none' }"
+          >
+            <!-- Trigger: same visual style as the other tabs -->
+            <button
+              class="h-full flex items-center gap-1 px-3 text-xs font-medium whitespace-nowrap shrink-0 border-b-2 transition-colors focus:outline-none"
+              :class="overflowTabs.some(t => t.id === activeTabId)
+                ? 'border-primary-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/60'"
+            >
+              <span class="tracking-widest leading-none pb-px">···</span>
+              <UIcon
+                name="i-lucide-chevron-down"
+                class="w-3 h-3 opacity-60 transition-transform"
+                :class="{ 'rotate-180': overflowOpen }"
+              />
+            </button>
+
+            <!-- Dropdown content -->
+            <template #content="{ close }">
+              <button
+                v-for="tab in overflowTabs"
+                :key="tab.id"
+                class="group w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-left transition-colors"
+                :class="activeTabId === tab.id
+                  ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800/60'"
+                @click="activeTabId = tab.id; close()"
+              >
+                <UIcon
+                  :name="tab.type === 'config' ? 'i-lucide-settings-2' : getFileIcon(tab.label)"
+                  class="w-3.5 h-3.5 shrink-0"
+                />
+                <span class="flex-1 truncate">{{ tab.label }}</span>
+                <span
+                  v-if="tab.canClose"
+                  class="p-0.5 rounded opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity hover:bg-gray-200 dark:hover:bg-gray-700"
+                  @click.stop="closeTab(tab.id); close()"
+                >
+                  <UIcon name="i-lucide-x" class="w-3 h-3" />
+                </span>
+              </button>
+            </template>
+          </UPopover>
         </div>
 
         <!-- Tab content -->
@@ -221,7 +277,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, useFetch, useComponentRouter } from '#imports'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch, useFetch, useComponentRouter } from '#imports'
 import StorageBrowser from '../../components/storage/Browser.vue'
 import StorageFileViewer from '../../components/storage/FileViewer.vue'
 import type { StorageInfo } from '../../components/storage/Card.vue'
@@ -250,6 +306,70 @@ const activeTabId = ref('config')
 
 const fileTabs = computed(() => tabs.value.filter(t => t.type === 'file'))
 
+// ── Overflow tab logic ────────────────────────────────────────────────────────
+
+const tabBarEl = ref<HTMLElement>()
+const overflowStartIdx = ref(tabs.value.length) // show all tabs initially
+const overflowOpen = ref(false)
+
+const overflowTabs = computed(() => tabs.value.slice(overflowStartIdx.value))
+
+/**
+ * Computes how many tabs fit in the tab bar.
+ *
+ * Tabs hidden via v-show have offsetWidth=0, so we temporarily un-hide them
+ * all before measuring, then set the cut-off index.
+ */
+async function computeOverflow() {
+  if (!tabBarEl.value) return
+
+  // Reveal all tabs so we can read their natural widths
+  overflowStartIdx.value = tabs.value.length
+  await nextTick()
+
+  const containerWidth = tabBarEl.value.clientWidth
+  // Reserve room for the ··· button (px-3 × 2 + text + chevron ≈ 60px)
+  const OVERFLOW_BTN_W = 60
+
+  const els = tabBarEl.value.querySelectorAll<HTMLElement>('[data-tab-btn]')
+  const widths = Array.from({ length: tabs.value.length }, (_, i) => els[i]?.offsetWidth ?? 0)
+
+  // If everything fits without a ··· button, leave all visible
+  if (widths.reduce((a, b) => a + b, 0) <= containerWidth) {
+    // overflowStartIdx already set to tabs.value.length above
+    return
+  }
+
+  // Find how many tabs fit alongside the ··· button
+  let used = 0
+  for (let i = 0; i < widths.length; i++) {
+    const w = widths[i] ?? 0
+    if (used + w + OVERFLOW_BTN_W > containerWidth) {
+      overflowStartIdx.value = i
+      return
+    }
+    used += w
+  }
+}
+
+let resizeObserver: ResizeObserver | null = null
+
+onMounted(() => {
+  resizeObserver = new ResizeObserver(() => { computeOverflow() })
+  if (tabBarEl.value) resizeObserver.observe(tabBarEl.value)
+  computeOverflow()
+})
+
+onUnmounted(() => resizeObserver?.disconnect())
+
+// Recompute whenever tabs are added or removed
+watch(
+  () => tabs.value.length,
+  () => { computeOverflow() },
+)
+
+// ── Tab management ────────────────────────────────────────────────────────────
+
 function openFileTab(key: string, name: string) {
   const existing = tabs.value.find(t => t.fileKey === key)
   if (existing) {
@@ -267,7 +387,6 @@ function closeTab(id: string) {
   const wasActive = activeTabId.value === id
   tabs.value.splice(idx, 1)
   if (wasActive) {
-    // Activate the tab to the left, or 'config' as fallback
     activeTabId.value = tabs.value[Math.max(0, idx - 1)]?.id ?? 'config'
   }
 }

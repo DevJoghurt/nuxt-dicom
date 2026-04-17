@@ -199,6 +199,53 @@ export const DicomConfigSchemas = {
   dicomStorage: DicomStorageConfigSchema,
 }
 
+// ── PACS Server configuration ─────────────────────────────────────────────────
+
+/**
+ * PACS server — a remote DICOM archive that can be queried via C-FIND.
+ * Supports Study Root, Patient Root, and Modality Worklist query models.
+ *
+ * @example
+ * ```ts
+ * { name: 'orthanc', addr: '127.0.0.1:4242', calledAeTitle: 'ORTHANC' }
+ * ```
+ */
+export const PacsServerConfigSchema = z.object({
+  /** Unique identifier used in the API and UI */
+  name: z.string(),
+  /** Human-readable display label (defaults to name) */
+  label: z.string().optional(),
+  /** Optional description shown in the UI */
+  description: z.string().optional(),
+  /**
+   * PACS server network address — `host:port`
+   * @example '192.168.1.10:4242'
+   * @example 'pacs.hospital.org:104'
+   */
+  addr: z.string(),
+  /**
+   * AE Title of the remote PACS SCP.
+   * Must match the AE title configured on the PACS server.
+   * @example 'ORTHANC'
+   */
+  calledAeTitle: z.string().optional(),
+  /**
+   * AE Title this SCU presents itself as during association negotiation.
+   * Must be registered / whitelisted on the PACS server for calls to be accepted.
+   * @default 'FIND-SCU'
+   */
+  callingAeTitle: z.string().default('FIND-SCU'),
+  /** Maximum PDU length in bytes for DICOM network communication */
+  maxPduLength: z.number().default(16384),
+  /** Default query/retrieve information model */
+  queryModel: z.enum(['StudyRoot', 'PatientRoot', 'ModalityWorklist']).default('PatientRoot'),
+  /** Enable verbose DIMSE protocol logging (useful for debugging AE title mismatches) */
+  verbose: z.boolean().default(false),
+})
+
+export type PacsServerConfig = z.infer<typeof PacsServerConfigSchema>
+export type PacsServerConfigInput = z.input<typeof PacsServerConfigSchema>
+
 // Validated runtime config type (after Zod parse + storage merge)
 export type StoreScpConfig = z.infer<typeof StoreSCPConfigSchema>
 

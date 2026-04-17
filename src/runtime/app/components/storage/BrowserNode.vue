@@ -29,6 +29,16 @@
         {{ node.name }}
       </span>
 
+      <!-- Directory actions (hover) -->
+      <template v-if="node.isDirectory && sourceName">
+        <DicomSendButton
+          :source-name="sourceName"
+          :study-uid="node.key.split(':')[0]"
+          :display-name="node.name"
+          button-class="opacity-0 group-hover:opacity-100 shrink-0"
+        />
+      </template>
+
       <!-- File meta + actions (hover) -->
       <template v-if="!node.isDirectory">
         <span
@@ -48,6 +58,14 @@
           class="opacity-0 group-hover:opacity-100 shrink-0"
           title="View file"
           @click.stop="onViewFile(node.key, node.name)"
+        />
+        <!-- Send button -->
+        <DicomSendButton
+          v-if="sourceName"
+          :source-name="sourceName"
+          :paths="[node.key]"
+          :display-name="node.name"
+          button-class="opacity-0 group-hover:opacity-100 shrink-0"
         />
         <!-- Download button -->
         <UButton
@@ -72,6 +90,7 @@
         :depth="depth + 1"
         :browser="browser"
         :on-view-file="onViewFile"
+        :source-name="sourceName"
       />
     </div>
   </div>
@@ -80,6 +99,7 @@
 <script setup lang="ts">
 import { ref, computed } from '#imports'
 import BrowserNode from './BrowserNode.vue'
+import DicomSendButton from '../dicom/SendButton.vue'
 import type { TreeNode } from '../../composables/useStorageFiles'
 import type { useStorageFiles } from '../../composables/useStorageFiles'
 
@@ -88,6 +108,7 @@ const props = defineProps<{
   depth: number
   browser: ReturnType<typeof useStorageFiles>
   onViewFile?: (key: string, name: string) => void
+  sourceName?: string
 }>()
 
 const isExpanded = ref(false)

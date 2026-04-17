@@ -2,8 +2,8 @@ import { defineNuxtModule, createResolver, addServerScanDir, addComponent, addCo
 import { join } from 'node:path'
 import { readFileSync } from 'node:fs'
 import defu from 'defu'
-import type { StoreScpConfig, ServiceConfigInput, ExternalDicomDestination, DicomStorageConfig, DicomStorageConfigInput } from './runtime/utils/schema'
-import { DicomConfigSchemas, ExternalDicomDestinationSchema, ServiceConfigSchema } from './runtime/utils/schema'
+import type { StoreScpConfig, ServiceConfigInput, ExternalDicomDestination, DicomStorageConfig, DicomStorageConfigInput, PacsServerConfig, PacsServerConfigInput } from './runtime/utils/schema'
+import { DicomConfigSchemas, ExternalDicomDestinationSchema, ServiceConfigSchema, PacsServerConfigSchema } from './runtime/utils/schema'
 import { scanDicomEventHandlers, generateHandlersTemplate } from './utils/scanDicomHandlers'
 import { watchDicomHandlers } from './utils/dev'
 
@@ -67,6 +67,18 @@ export interface ModuleOptions {
    * ```
    */
   services?: ServiceConfigInput[]
+  /**
+   * Remote PACS servers that can be queried via C-FIND (FindSCU).
+   *
+   * @example
+   * ```ts
+   * pacs: [
+   *   { name: 'orthanc', addr: '127.0.0.1:4242', calledAeTitle: 'ORTHANC' },
+   *   { name: 'hospital-pacs', addr: 'pacs.hospital.org:104', calledAeTitle: 'HPACS', callingAeTitle: 'MY-SCU' },
+   * ]
+   * ```
+   */
+  pacs?: PacsServerConfigInput[]
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -84,6 +96,7 @@ export default defineNuxtModule<ModuleOptions>({
     serviceLogs: {},
     storages: {},
     services: [],
+    pacs: [],
   },
   moduleDependencies: {
     '@nhealth/nutils': {},
@@ -96,8 +109,11 @@ export default defineNuxtModule<ModuleOptions>({
       from: resolver.resolve('./runtime/utils/services'),
       name: 'storeSCPServiceManager',
     }, {
-      from: resolver.resolve('./runtime/utils/storeSCUJobManager'),
+      from: resolver.resolve('./runtime/utils/jobs'),
       name: 'storeSCUJobManager',
+    }, {
+      from: resolver.resolve('./runtime/utils/jobs'),
+      name: 'dicomRetrieveJobManager',
     }, {
       from: resolver.resolve('./runtime/utils/serviceRegistry'),
       name: 'dicomServiceRegistry',
@@ -154,6 +170,16 @@ export default defineNuxtModule<ModuleOptions>({
     addImports({
       name: 'useStorageFiles',
       from: resolver.resolve('./runtime/app/composables/useStorageFiles'),
+    })
+
+    addImports({
+      name: 'useJobs',
+      from: resolver.resolve('./runtime/app/composables/useJobs'),
+    })
+
+    addImports({
+      name: 'useDicomSend',
+      from: resolver.resolve('./runtime/app/composables/useDicomSend'),
     })
 
     // Add route if enabled
@@ -309,6 +335,26 @@ export default defineNuxtModule<ModuleOptions>({
       console.log(`[nuxt-dicom] registered external service: ${dest.name} (${dest.protocol})`)
     }
 
+    // Validate and register PACS servers
+    const processPacs = (pacs: PacsServerConfigInput[] = []): PacsServerConfig[] => {
+      return pacs
+        .map((entry, idx) => {
+          const parsed = PacsServerConfigSchema.safeParse(entry)
+          if (!parsed.success) {
+            console.warn(`[nuxt-dicom] Invalid PACS config at index ${idx}:`, parsed.error.issues)
+            return null
+          }
+          return parsed.data
+        })
+        .filter((p): p is PacsServerConfig => p !== null)
+    }
+
+    const registeredPacs = processPacs(options.pacs)
+
+    for (const pacs of registeredPacs) {
+      console.log(`[nuxt-dicom] registered PACS: ${pacs.name} (${pacs.addr})`)
+    }
+
     // Add to runtime config - simple list of configured services
     runtimeConfig.dicom = defu(runtimeConfig?.dicom || {}, {
       logLevel: options.logLevel,
@@ -316,6 +362,7 @@ export default defineNuxtModule<ModuleOptions>({
       services: resolvedServices,
       storages: registeredStorages,
       destinations: registeredDestinations,
+      pacs: registeredPacs,
       handlers: scannedHandlers.map(handler => ({
         serviceName: handler.serviceName,
         eventType: handler.eventType,
