@@ -33,6 +33,7 @@ export function useStorageFiles(storageName: string) {
   async function fetchRoot() {
     isLoading.value = true
     error.value = null
+    loadedKeys.clear()
     try {
       const nodes = await fetchLevel('')
       rootNodes.value = nodes.map(n => ({ ...n, isLoaded: !n.isDirectory }))

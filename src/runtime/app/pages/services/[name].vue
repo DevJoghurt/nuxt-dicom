@@ -105,7 +105,7 @@
       class="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden"
     >
       <!-- Left: Logs (2/3) -->
-      <div class="flex-[2] min-h-0 flex flex-col border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-800">
+      <div class="flex-[2] min-h-0 min-w-0 flex flex-col border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-800">
         <ServiceLogViewer :service-name="serviceName" />
       </div>
 

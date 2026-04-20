@@ -2,12 +2,15 @@
   <NUtilsComponentRouter
     v-slot="{ component }"
     :routes="routes"
-    base="p"
-    mode="query"
+    :base="base"
+    :mode="mode"
+    :initial="initial"
   >
     <NUtilsComponentShell
-      orientation="horizontal"
+      :orientation="orientation"
       :items="navigationItems"
+      :page-offset="pageOffset"
+      :active-match="activeMatch"
     >
       <template #leading>
         <div class="px-4 py-3 border-gray-200 dark:border-gray-800 flex items-center gap-2.5">
@@ -34,6 +37,21 @@
 
 <script setup lang="ts">
 import DicomJobsTasksButton from '../components/jobs/TasksButton.vue'
+
+const props = withDefaults(defineProps<{
+  pageOffset?: string | number
+  activeMatch?: 'exact' | 'prefix'
+  orientation?: 'horizontal' | 'vertical'
+  base?: string
+  mode?: 'query' | 'hash' | 'memory'
+  initial?: string
+}>(), {
+  pageOffset: 0,
+  activeMatch: 'prefix',
+  orientation: 'horizontal',
+  base: 'p',
+  mode: 'query',
+})
 
 const routes = {
   '/services': () => import('./services/index.vue'),

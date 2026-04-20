@@ -54,7 +54,7 @@
     </div>
 
     <!-- Log output -->
-    <div class="flex-1 min-h-0 overflow-y-auto bg-gray-950 px-4 py-3 font-mono text-xs text-gray-300 space-y-0.5">
+    <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-gray-950 px-4 py-3 font-mono text-xs text-gray-300 space-y-0.5">
       <div
         v-if="liveLogs.logs.value.length === 0"
         class="text-gray-600 pt-1"

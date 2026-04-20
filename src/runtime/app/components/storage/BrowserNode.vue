@@ -97,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from '#imports'
+import { ref, computed, watch } from '#imports'
 import BrowserNode from './BrowserNode.vue'
 import DicomSendButton from '../dicom/SendButton.vue'
 import type { TreeNode } from '../../composables/useStorageFiles'
@@ -114,6 +114,12 @@ const props = defineProps<{
 const isExpanded = ref(false)
 
 const isDcm = computed(() => props.node.name.toLowerCase().endsWith('.dcm'))
+
+// When fetchRoot() replaces node objects (e.g. on reload), reset expansion
+// so the folder doesn't appear open-but-empty with stale state.
+watch(() => props.node, () => {
+  isExpanded.value = false
+})
 
 async function toggle() {
   if (!props.node.isDirectory) {
