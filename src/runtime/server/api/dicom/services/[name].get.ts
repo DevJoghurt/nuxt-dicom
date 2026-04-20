@@ -1,4 +1,4 @@
-import { defineEventHandler, getRouterParam, createError, dicomServiceRegistry, storeSCPServiceManager } from '#imports'
+import { defineEventHandler, getRouterParam, createError, dicomServiceRegistry, storeSCPServiceManager, getStorageByName } from '#imports'
 
 /**
  * GET /api/dicom/services/[name]
@@ -39,17 +39,32 @@ export default defineEventHandler(async (event) => {
       isRunning,
       createdAt: service.createdAt,
       startedAt: service.startedAt,
-      // Flatten config fields for easier UI access
+      // Service-specific config
       port: config.port,
       callingAETitle: config.callingAETitle,
-      outDir: config.outDir,
       autoStart: config.autoStart,
       maxPduLength: config.maxPduLength,
-      storageBackend: config.storageBackend,
-      storageKey: config.storageKey,
-      storeWithFileMeta: config.storeWithFileMeta,
       verbose: config.verbose,
       studyTimeout: config.studyTimeout,
+      strict: config.strict,
+      abstractSyntaxMode: config.abstractSyntaxMode,
+      abstractSyntaxes: config.abstractSyntaxes,
+      transferSyntaxMode: config.transferSyntaxMode,
+      transferSyntaxes: config.transferSyntaxes,
+      extractTags: config.extractTags,
+      // Storage — resolved from the named storage registry when storageKey is present,
+      // falling back to the merged values for inline/legacy configs
+      storage: (() => {
+        const storageKey = config.storageKey
+        const registryEntry = storageKey ? getStorageByName(storageKey) : undefined
+        return {
+          key: storageKey,
+          backend: registryEntry?.storageBackend ?? config.storageBackend,
+          outDir: registryEntry?.outDir ?? config.outDir,
+          storeWithFileMeta: registryEntry?.storeWithFileMeta ?? config.storeWithFileMeta,
+          autoDeleteAfterDays: registryEntry?.autoDeleteAfterDays ?? config.autoDeleteAfterDays,
+        }
+      })(),
       // Event handlers mapped by event type
       eventHandlers,
       // Include full config for advanced use cases

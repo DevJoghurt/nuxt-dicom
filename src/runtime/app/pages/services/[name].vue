@@ -167,19 +167,19 @@
           </h4>
           <!-- Storage key link -->
           <div
-            v-if="service.storageKey"
+            v-if="service.storage.key"
             class="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/60 cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 transition-colors mb-3"
-            @click="openStorage(service.storageKey)"
+            @click="openStorage(service.storage.key)"
           >
             <UIcon name="i-lucide-database" class="w-3.5 h-3.5 text-primary-500 shrink-0" />
-            <span class="text-sm font-mono text-gray-700 dark:text-gray-300">{{ service.storageKey }}</span>
+            <span class="text-sm font-mono text-gray-700 dark:text-gray-300">{{ service.storage.key }}</span>
             <UIcon name="i-lucide-arrow-right" class="w-3 h-3 text-gray-400 ml-auto" />
           </div>
           <div
             v-else
             class="bg-gray-50 dark:bg-gray-800/60 rounded-lg px-3 py-2.5 font-mono text-xs break-all text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700/60 leading-relaxed mb-3"
           >
-            {{ service.outDir }}
+            {{ service.storage.outDir }}
           </div>
           <!-- Storage detail rows -->
           <dl class="space-y-2.5">
@@ -189,7 +189,7 @@
               </dt>
               <dd>
                 <UBadge color="neutral" variant="subtle" size="xs">
-                  {{ service.storageBackend }}
+                  {{ service.storage.backend }}
                 </UBadge>
               </dd>
             </div>
@@ -199,11 +199,11 @@
               </dt>
               <dd>
                 <UBadge
-                  :color="service.storeWithFileMeta ? 'success' : 'neutral'"
+                  :color="service.storage.storeWithFileMeta ? 'success' : 'neutral'"
                   variant="subtle"
                   size="xs"
                 >
-                  {{ service.storeWithFileMeta ? 'Included' : 'Excluded' }}
+                  {{ service.storage.storeWithFileMeta ? 'Included' : 'Excluded' }}
                 </UBadge>
               </dd>
             </div>
@@ -213,11 +213,11 @@
               </dt>
               <dd>
                 <UBadge
-                  :color="service.autoDeleteAfterDays > 0 ? 'warning' : 'neutral'"
+                  :color="service.storage.autoDeleteAfterDays > 0 ? 'warning' : 'neutral'"
                   variant="subtle"
                   size="xs"
                 >
-                  {{ service.autoDeleteAfterDays > 0 ? `After ${service.autoDeleteAfterDays}d` : 'Disabled' }}
+                  {{ service.storage.autoDeleteAfterDays > 0 ? `After ${service.storage.autoDeleteAfterDays}d` : 'Disabled' }}
                 </UBadge>
               </dd>
             </div>
@@ -433,17 +433,20 @@ import {
 } from '#imports'
 import ServiceLogViewer from '../../components/service/LogViewer.vue'
 
+interface DicomServiceStorage {
+  key?: string
+  backend: string
+  outDir: string
+  storeWithFileMeta: boolean
+  autoDeleteAfterDays: number
+}
+
 interface DicomService {
   name: string
   status: 'running' | 'stopped'
   port: number
   callingAETitle: string
-  outDir: string
-  storageBackend: string
-  storageKey?: string
-  storeWithFileMeta: boolean
   autoStart: boolean
-  autoDeleteAfterDays: number
   maxPduLength: number
   strict: boolean
   verbose: boolean
@@ -453,6 +456,7 @@ interface DicomService {
   transferSyntaxMode: string
   transferSyntaxes?: string[]
   extractTags: string[]
+  storage: DicomServiceStorage
   isRunning: boolean
   createdAt?: string
   startedAt?: string
@@ -468,17 +472,13 @@ const serviceName = computed(() => {
 
 const transformService = (data: unknown): DicomService => {
   const s = (data as Record<string, unknown>) || {}
+  const st = (s.storage as Record<string, unknown>) || {}
   return {
     name: String(s.name || ''),
     status: (s.isRunning ? 'running' : 'stopped') as 'running' | 'stopped',
     port: Number(s.port || 0),
     callingAETitle: String(s.callingAETitle || 'STORESCP'),
-    outDir: String(s.outDir || ''),
-    storageBackend: String(s.storageBackend || 'Filesystem'),
-    storageKey: s.storageKey as string | undefined,
-    storeWithFileMeta: Boolean(s.storeWithFileMeta),
     autoStart: Boolean(s.autoStart !== false),
-    autoDeleteAfterDays: Number(s.autoDeleteAfterDays ?? 0),
     maxPduLength: Number(s.maxPduLength || 16384),
     strict: Boolean(s.strict),
     verbose: Boolean(s.verbose),
@@ -488,6 +488,13 @@ const transformService = (data: unknown): DicomService => {
     transferSyntaxMode: String(s.transferSyntaxMode || 'All'),
     transferSyntaxes: s.transferSyntaxes as string[] | undefined,
     extractTags: (s.extractTags as string[]) || [],
+    storage: {
+      key: st.key as string | undefined,
+      backend: String(st.backend || 'Filesystem'),
+      outDir: String(st.outDir || ''),
+      storeWithFileMeta: Boolean(st.storeWithFileMeta),
+      autoDeleteAfterDays: Number(st.autoDeleteAfterDays ?? 0),
+    },
     isRunning: Boolean(s.isRunning),
     createdAt: s.createdAt as string | undefined,
     startedAt: s.startedAt as string | undefined,

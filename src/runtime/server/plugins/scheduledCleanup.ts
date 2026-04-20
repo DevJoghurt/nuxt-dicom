@@ -3,8 +3,8 @@ import { cleanupAllServices } from '../utils/cleanupFiles'
 
 export default defineNitroPlugin(() => {
   const config = useRuntimeConfig()
-  const services = (config.dicom?.services as Array<{ autoDeleteAfterDays?: number }>) || []
-  const hasCleanup = services.some(s => (s.autoDeleteAfterDays ?? 0) > 0)
+  const storages = (config.dicom?.storages as Array<{ autoDeleteAfterDays?: number }>) || []
+  const hasCleanup = storages.some(s => (s.autoDeleteAfterDays ?? 0) > 0)
 
   if (hasCleanup) {
     console.log('[cleanup] Per-service file cleanup is enabled')
